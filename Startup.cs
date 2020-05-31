@@ -27,8 +27,8 @@ namespace AzureMediaStreaming
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddMvc();
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
-            services.AddRazorPages();
             services.Configure<ClientSettings>(options => _configuration.GetSection(nameof(ClientSettings)).Bind(options));
             services.AddTransient<IAzureMediaServicesClient>(x => GetAzureMediaServicesClient());
             services.AddTransient<IAzureMediaService, AzureMediaService>();
@@ -58,7 +58,6 @@ namespace AzureMediaStreaming
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller}/{action=Index}/{id?}");
-                endpoints.MapRazorPages();
             });
 
             app.UseSpa(spa =>

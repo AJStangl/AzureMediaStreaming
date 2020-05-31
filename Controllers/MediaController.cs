@@ -1,9 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using AzureMediaStreaming.AzureServices;
+using AzureMediaStreaming.Settings;
 using AzureMediaStreaming.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace AzureMediaStreaming.Controllers
 {
@@ -11,9 +14,11 @@ namespace AzureMediaStreaming.Controllers
     public class MediaController : ControllerBase
     {
         private readonly IAzureMediaService _azureMediaService;
-        public MediaController(IAzureMediaService azureMediaService)
+        private readonly ILogger<MediaController> _logger;
+        public MediaController(IAzureMediaService azureMediaService, ILogger<MediaController> logger)
         {
             _azureMediaService = azureMediaService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -22,14 +27,24 @@ namespace AzureMediaStreaming.Controllers
         {
             // TODO: Implement everything
             string locatorName = "locator-c7943896de4d4cb6a6484fc878028fd7";
-            var videoUrls = await _azureMediaService.GetStreamingUrlsAsync(locatorName);
-            string videoUrl = videoUrls.FirstOrDefault();
-
-            return new VideoModel
+            _logger.LogInformation("Getting streaming");
+            try
             {
-                VideoName = "Demo Video",
-                VideoUrl = videoUrl
-            };
+                var videoUrls = await _azureMediaService.GetStreamingUrlsAsync(locatorName);
+                string videoUrl = videoUrls.FirstOrDefault();
+
+                return new VideoModel
+                {
+                    VideoName = "Demo Video",
+                    VideoUrl = videoUrl
+                };
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "An error has occured trying to obtain data");
+                throw;
+            }
+
         }
 
         [HttpGet]
@@ -37,7 +52,13 @@ namespace AzureMediaStreaming.Controllers
         public async Task Doit([FromServices] IAzureStreamingService azureStreamingService)
         {
             await azureStreamingService.UploadAndRetrieve();
+        }
 
+        [HttpGet]
+        [Route("[action]")]
+        public IActionResult Settings([FromServices] IConfiguration configuration)
+        {
+            return Ok(configuration.GetSection(nameof(ClientSettings)).Get<ClientSettings>());
         }
     }
 }
