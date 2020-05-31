@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using AzureMediaStreaming.AzureServices;
 using AzureMediaStreaming.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 
 namespace AzureMediaStreaming.Controllers
 {
@@ -29,12 +30,14 @@ namespace AzureMediaStreaming.Controllers
                 VideoName = "Demo Video",
                 VideoUrl = videoUrl
             };
-            // Leaving this here incase I go back to CSHTML
-            // return View(new VideoModel
-            // {
-            // VideoName = "Demo Video",
-            // VideoUrl = videoUrl
-            // });
+        }
+
+        [HttpGet]
+        [Route("[action]")]
+        public async Task Doit([FromServices] IAzureStreamingService azureStreamingService)
+        {
+            await azureStreamingService.UploadAndRetrieve();
+
         }
     }
 }

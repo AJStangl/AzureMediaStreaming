@@ -17,7 +17,7 @@ namespace AzureMediaStreaming.AzureServices
     {
         private readonly ILogger<AzureMediaService> _logger;
         private readonly ClientSettings _clientSettings;
-        public IAzureMediaServicesClient AzureMediaServicesClient { get; set; }
+        private readonly IAzureMediaServicesClient _azureMediaServicesClient;
         public AzureMediaService(
             ILogger<AzureMediaService> logger,
             IOptions<ClientSettings> clientSettings,
@@ -25,7 +25,7 @@ namespace AzureMediaStreaming.AzureServices
         {
             _logger = logger;
             _clientSettings = clientSettings?.Value ?? throw new ArgumentNullException(nameof(clientSettings));
-            AzureMediaServicesClient = azureMediaServicesClient;
+            _azureMediaServicesClient = azureMediaServicesClient;
         }
 
 
@@ -33,7 +33,7 @@ namespace AzureMediaStreaming.AzureServices
         {
             EnsureArg.IsNotEmptyOrWhiteSpace(transformName, nameof(transformName));
 
-            Transform transform = await AzureMediaServicesClient.Transforms.GetAsync(_clientSettings.ResourceGroup,
+            Transform transform = await _azureMediaServicesClient.Transforms.GetAsync(_clientSettings.ResourceGroup,
                 _clientSettings.AccountName, transformName);
 
             if (transform != null) return transform;
@@ -50,7 +50,7 @@ namespace AzureMediaStreaming.AzureServices
                 }
             };
 
-            transform = await AzureMediaServicesClient.Transforms.CreateOrUpdateAsync(_clientSettings.ResourceGroup,
+            transform = await _azureMediaServicesClient.Transforms.CreateOrUpdateAsync(_clientSettings.ResourceGroup,
                 _clientSettings.AccountName, transformName, output);
 
             return transform;
@@ -61,7 +61,7 @@ namespace AzureMediaStreaming.AzureServices
             EnsureArg.IsNotEmptyOrWhiteSpace(assetName, nameof(assetName));
 
             Asset outputAsset =
-                await AzureMediaServicesClient.Assets.GetAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName, assetName);
+                await _azureMediaServicesClient.Assets.GetAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName, assetName);
             Asset asset = new Asset();
             string outputAssetName = assetName;
 
@@ -73,17 +73,17 @@ namespace AzureMediaStreaming.AzureServices
                 _logger.LogInformation("Creating an Asset with this name instead: " + outputAssetName);
             }
 
-            return await AzureMediaServicesClient.Assets.CreateOrUpdateAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName,
+            return await _azureMediaServicesClient.Assets.CreateOrUpdateAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName,
                 outputAssetName, asset);
         }
 
         public async Task<Asset> CreateInputAssetAsync(string assetName,
             string fileToUpload)
         {
-            Asset asset = await AzureMediaServicesClient.Assets.CreateOrUpdateAsync(_clientSettings.ResourceGroup,
+            Asset asset = await _azureMediaServicesClient.Assets.CreateOrUpdateAsync(_clientSettings.ResourceGroup,
                 _clientSettings.AccountName, assetName, new Asset());
 
-            var response = await AzureMediaServicesClient.Assets.ListContainerSasAsync(
+            var response = await _azureMediaServicesClient.Assets.ListContainerSasAsync(
                 _clientSettings.ResourceGroup,
                 _clientSettings.AccountName,
                 assetName,
@@ -100,13 +100,12 @@ namespace AzureMediaStreaming.AzureServices
             return asset;
         }
 
-        public async Task<Job> SubmitJobAsync(string transformName,
-            string outputAssetName, string jobName)
+        public async Task<Job> SubmitJobAsync(string transformName, string outputAssetName, string jobName)
         {
             JobInputHttp jobInput =
                 new JobInputHttp(files: new[]
                 {
-                    "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/Ignite-short.mp4"
+                    "https://ajstangl.blob.core.windows.net/asset-0ce38fc1-77cc-4c8f-ad68-398ffb401032/ch01-20200524-224458-224511-103000000000.avi?sv=2017-04-17&sr=c&si=4babe4e2-2852-47e3-b2ac-2dacb3ea5a45&sig=3cs3aNGMT8Ymkxs3xb1MLNGwKSt1FUQjSoyX%2Byzks3s%3D&st=2020-05-31T18%3A23%3A46Z&se=2120-05-31T18%3A23%3A46Z"
                 });
 
             JobOutput[] jobOutputs =
@@ -114,7 +113,7 @@ namespace AzureMediaStreaming.AzureServices
                 new JobOutputAsset(outputAssetName),
             };
 
-            Job job = await AzureMediaServicesClient.Jobs.CreateAsync(
+            Job job = await _azureMediaServicesClient.Jobs.CreateAsync(
                 _clientSettings.ResourceGroup,
                 _clientSettings.AccountName,
                 transformName,
@@ -137,7 +136,7 @@ namespace AzureMediaStreaming.AzureServices
             Job job;
             do
             {
-                job = await AzureMediaServicesClient.Jobs.GetAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName,
+                job = await _azureMediaServicesClient.Jobs.GetAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName,
                     transformName, jobName);
 
                 _logger.LogInformation($"Job is '{job.State}'.");
@@ -162,7 +161,7 @@ namespace AzureMediaStreaming.AzureServices
 
         public async Task<StreamingLocator> CreateStreamingLocatorAsync(string assetName, string locatorName)
         {
-            StreamingLocator locator = await AzureMediaServicesClient.StreamingLocators.CreateAsync(
+            StreamingLocator locator = await _azureMediaServicesClient.StreamingLocators.CreateAsync(
                 _clientSettings.ResourceGroup,
                 _clientSettings.AccountName,
                 locatorName,
@@ -182,14 +181,14 @@ namespace AzureMediaStreaming.AzureServices
             IList<string> streamingUrls = new List<string>();
 
             StreamingEndpoint streamingEndpoint =
-                await AzureMediaServicesClient.StreamingEndpoints.GetAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName,
+                await _azureMediaServicesClient.StreamingEndpoints.GetAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName,
                     defaultStreamingEndpointName);
 
             if (streamingEndpoint != null)
             {
                 if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
                 {
-                    await AzureMediaServicesClient.StreamingEndpoints.StartAsync(_clientSettings.ResourceGroup,
+                    await _azureMediaServicesClient.StreamingEndpoints.StartAsync(_clientSettings.ResourceGroup,
                         _clientSettings.AccountName, defaultStreamingEndpointName);
                 }
             }
@@ -200,7 +199,7 @@ namespace AzureMediaStreaming.AzureServices
             }
 
             ListPathsResponse paths =
-                await AzureMediaServicesClient.StreamingLocators.ListPathsAsync(_clientSettings.ResourceGroup,
+                await _azureMediaServicesClient.StreamingLocators.ListPathsAsync(_clientSettings.ResourceGroup,
                     _clientSettings.AccountName, locatorName);
 
             paths.StreamingPaths.ToList().ForEach(path =>
@@ -225,7 +224,7 @@ namespace AzureMediaStreaming.AzureServices
                 Directory.CreateDirectory(outputFolderName);
             }
 
-            AssetContainerSas assetContainerSas = await AzureMediaServicesClient.Assets.ListContainerSasAsync(
+            AssetContainerSas assetContainerSas = await _azureMediaServicesClient.Assets.ListContainerSasAsync(
                 _clientSettings.ResourceGroup,
                 _clientSettings.AccountName,
                 assetName,
@@ -274,12 +273,12 @@ namespace AzureMediaStreaming.AzureServices
         public async Task CleanUpAsync(string transformName, List<string> assetNames,
             string jobName)
         {
-            await AzureMediaServicesClient.Jobs.DeleteAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName, transformName,
+            await _azureMediaServicesClient.Jobs.DeleteAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName, transformName,
                 jobName);
 
             assetNames.ForEach(async assetName =>
             {
-                await AzureMediaServicesClient.Assets.DeleteAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName,
+                await _azureMediaServicesClient.Assets.DeleteAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName,
                     assetName);
             });
         }

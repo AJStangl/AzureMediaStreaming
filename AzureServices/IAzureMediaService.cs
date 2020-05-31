@@ -7,7 +7,6 @@ namespace AzureMediaStreaming.AzureServices
 {
     public interface IAzureMediaService
     {
-        public IAzureMediaServicesClient AzureMediaServicesClient { get; set; }
         public Task<Asset> CreateOutputAssetAsync(string assetName);
         public Task<Job> SubmitJobAsync(string transformName, string outputAssetName, string jobName);
         public Task<Job> WaitForJobToFinishAsync(string transformName, string jobName);

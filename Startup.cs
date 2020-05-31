@@ -32,6 +32,7 @@ namespace AzureMediaStreaming
             services.Configure<ClientSettings>(options => _configuration.GetSection(nameof(ClientSettings)).Bind(options));
             services.AddTransient<IAzureMediaServicesClient>(x => GetAzureMediaServicesClient());
             services.AddTransient<IAzureMediaService, AzureMediaService>();
+            services.AddTransient<IAzureStreamingService, AzureStreamingService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
