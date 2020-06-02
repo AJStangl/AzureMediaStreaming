@@ -3,7 +3,10 @@ using AzureMediaStreaming.AzureServices;
 using AzureMediaStreaming.Settings;
 using EnsureThat;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Cors;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Extensions.Configuration;
@@ -27,12 +30,30 @@ namespace AzureMediaStreaming
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
+            services.AddMvc(options => { });
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
-            services.Configure<ClientSettings>(options => _configuration.GetSection(nameof(ClientSettings)).Bind(options));
-            services.AddTransient<IAzureMediaServicesClient>(x => GetAzureMediaServicesClient());
-            services.AddTransient<IAzureMediaService, AzureMediaService>();
-            services.AddTransient<IAzureStreamingService, AzureStreamingService>();
+            services.Configure<ClientSettings>(options =>
+                _configuration.GetSection(nameof(ClientSettings)).Bind(options));
+            services.AddSingleton<IAzureMediaServicesClient>(x => GetAzureMediaServicesClient());
+            services.AddSingleton<IAzureMediaService, AzureMediaService>();
+            services.AddSingleton<IAzureStreamingService, AzureStreamingService>();
+            services.AddAntiforgery(o =>
+            {
+                o.SuppressXFrameOptionsHeader = true;
+                o.Cookie.SameSite = SameSiteMode.None;
+                o.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            });
+            services.AddCors(x =>
+            {
+                x.AddPolicy("AllowAll", builder =>
+                {
+                    builder.AllowAnyHeader();
+                    builder.AllowAnyOrigin();
+                    builder.AllowAnyMethod();
+                    builder.Build();
+                });
+            });
+            services.AddApplicationInsightsTelemetry();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -44,13 +65,12 @@ namespace AzureMediaStreaming
             else
             {
                 app.UseExceptionHandler("/Error");
-                app.UseHsts();
             }
 
+            app.UseHsts();
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
-
             app.UseRouting();
 
             app.UseEndpoints(endpoints =>
@@ -76,7 +96,8 @@ namespace AzureMediaStreaming
             var clientSettings = _configuration.GetSection(nameof(ClientSettings)).Get<ClientSettings>();
             EnsureArg.IsNotNull(clientSettings, nameof(clientSettings));
 
-            ClientCredential clientCredential = new ClientCredential(clientSettings?.AadClientId, clientSettings?.AadSecret);
+            ClientCredential clientCredential =
+                new ClientCredential(clientSettings?.AadClientId, clientSettings?.AadSecret);
             var serviceClientCredentials = ApplicationTokenProvider.LoginSilentAsync(clientSettings?.AadTenantId,
                 clientCredential, ActiveDirectoryServiceSettings.Azure).Result;
             return new AzureMediaServicesClient(clientSettings.ArmEndpoint, serviceClientCredentials)
