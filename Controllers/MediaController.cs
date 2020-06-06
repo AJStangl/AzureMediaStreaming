@@ -23,7 +23,7 @@ namespace AzureMediaStreaming.Controllers
 
         [HttpGet]
         [Route("[action]")]
-        public async Task<VideoModel> Video()
+        public async Task<IActionResult> Video()
         {
             // TODO: Implement everything
             string locatorName = "locator-c7943896de4d4cb6a6484fc878028fd7";
@@ -33,11 +33,11 @@ namespace AzureMediaStreaming.Controllers
                 var videoUrls = await _azureMediaService.GetStreamingUrlsAsync(locatorName);
                 string videoUrl = videoUrls.FirstOrDefault();
 
-                return new VideoModel
+                return Ok(new VideoModel
                 {
                     VideoName = "Demo Video",
                     VideoUrl = videoUrl
-                };
+                });
             }
             catch (Exception e)
             {
