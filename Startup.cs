@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using AzureMediaStreaming.AzureServices;
 using AzureMediaStreaming.Settings;
 using EnsureThat;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest.Azure.Authentication;
@@ -29,9 +31,9 @@ namespace AzureMediaStreaming
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
             services.Configure<ClientSettings>(options =>
                 _configuration.GetSection(nameof(ClientSettings)).Bind(options));
-            services.AddSingleton<IAzureMediaServicesClient>(x => GetAzureMediaServicesClient());
-            services.AddSingleton<IAzureMediaService, AzureMediaService>();
-            services.AddSingleton<IAzureStreamingService, AzureStreamingService>();
+            services.AddTransient<IAzureMediaServicesClient>(x => GetAzureMediaServicesClient());
+            services.AddTransient<IAzureMediaService, AzureMediaService>();
+            services.AddTransient<IAzureStreamingService, AzureStreamingService>();
             services.AddAntiforgery(o =>
             {
                 o.SuppressXFrameOptionsHeader = true;
@@ -78,6 +80,9 @@ namespace AzureMediaStreaming
             app.UseSpa(spa =>
             {
                 spa.Options.SourcePath = "ClientApp";
+                app.UseDefaultFiles();
+                app.UseStaticFiles();
+                app.UseSpaStaticFiles();
 
                 if (env.IsDevelopment())
                 {

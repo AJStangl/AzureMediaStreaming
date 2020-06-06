@@ -54,11 +54,11 @@ namespace AzureMediaStreaming.Controllers
         //     await azureStreamingService.UploadAndRetrieve();
         // }
 
-        // [HttpGet]
-        // [Route("[action]")]
-        // public IActionResult Settings([FromServices] IConfiguration configuration)
-        // {
-        //     return Ok(configuration.GetSection(nameof(ClientSettings)).Get<ClientSettings>());
-        // }
+        [HttpGet]
+        [Route("[action]")]
+        public IActionResult Settings([FromServices] IConfiguration configuration)
+        {
+            return Ok(configuration.GetSection(nameof(ClientSettings)).Get<ClientSettings>());
+        }
     }
 }

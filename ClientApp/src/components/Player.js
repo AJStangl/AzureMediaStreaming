@@ -8,7 +8,7 @@ class Player extends Component {
     }
 
     static defaultProps = {
-        ampLoadTimeout: 300,
+        ampLoadTimeout: 30000,
     };
 
     componentDidMount() {

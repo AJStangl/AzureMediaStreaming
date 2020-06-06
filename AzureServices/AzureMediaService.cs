@@ -9,6 +9,8 @@ using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Rest.Azure.Authentication;
 using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace AzureMediaStreaming.AzureServices
@@ -20,12 +22,11 @@ namespace AzureMediaStreaming.AzureServices
         private readonly IAzureMediaServicesClient _azureMediaServicesClient;
         public AzureMediaService(
             ILogger<AzureMediaService> logger,
-            IOptions<ClientSettings> clientSettings,
-            IAzureMediaServicesClient azureMediaServicesClient)
+            IOptions<ClientSettings> clientSettings)
         {
             _logger = logger;
             _clientSettings = clientSettings?.Value ?? throw new ArgumentNullException(nameof(clientSettings));
-            _azureMediaServicesClient = azureMediaServicesClient;
+            _azureMediaServicesClient = GetAzureMediaServicesClient();
         }
 
 
@@ -281,6 +282,18 @@ namespace AzureMediaStreaming.AzureServices
                 await _azureMediaServicesClient.Assets.DeleteAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName,
                     assetName);
             });
+        }
+        private AzureMediaServicesClient GetAzureMediaServicesClient()
+        {
+
+            ClientCredential clientCredential =
+                new ClientCredential(_clientSettings?.AadClientId, _clientSettings?.AadSecret);
+            var serviceClientCredentials = ApplicationTokenProvider.LoginSilentAsync(_clientSettings?.AadTenantId,
+                clientCredential, ActiveDirectoryServiceSettings.Azure).Result;
+            return new AzureMediaServicesClient(_clientSettings.ArmEndpoint, serviceClientCredentials)
+            {
+                SubscriptionId = _clientSettings.SubscriptionId,
+            };
         }
     }
 }
