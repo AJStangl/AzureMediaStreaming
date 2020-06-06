@@ -7,6 +7,8 @@
         <IsPackable>false</IsPackable>
         <SpaRoot>ClientApp\</SpaRoot>
         <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
+        <AzureMediaPlayerJs>https://amp.azure.net/libs/amp/2.1.4/azuremediaplayer.min.js</AzureMediaPlayerJs>
+        <AzureMediaPlayerCss>https://amp.azure.net/libs/amp/2.1.4/skins/amp-default/azuremediaplayer.min.css</AzureMediaPlayerCss>
     </PropertyGroup>
 
     <ItemGroup>
@@ -62,5 +64,12 @@
             </ResolvedFileToPublish>
         </ItemGroup>
     </Target>
-
+    <Target Name="DownloadStaticFiles" BeforeTargets="Build">
+        <DownloadFile SourceUrl="$(AzureMediaPlayerJs)" DestinationFolder="$(SpaRoot)\public\js\vendor" SkipUnchangedFiles="true">
+            <Output TaskParameter="DownloadedFile" ItemName="Content" />
+        </DownloadFile>
+        <DownloadFile SourceUrl="$(AzureMediaPlayerCss)" DestinationFolder="$(SpaRoot)\public\css\vendor" SkipUnchangedFiles="true">
+            <Output TaskParameter="DownloadedFile" ItemName="Content" />
+        </DownloadFile>
+    </Target>
 </Project>
