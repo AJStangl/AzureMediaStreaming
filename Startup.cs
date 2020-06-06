@@ -27,7 +27,10 @@ namespace AzureMediaStreaming
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc(options => { });
+            services.AddMvc(options =>
+            {
+                options.EnableEndpointRouting = false;
+            });
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
             services.Configure<ClientSettings>(options =>
                 _configuration.GetSection(nameof(ClientSettings)).Bind(options));
@@ -61,7 +64,8 @@ namespace AzureMediaStreaming
             }
             else
             {
-                app.UseExceptionHandler("/Error");
+                app.UseDeveloperExceptionPage();
+                // app.UseExceptionHandler("/Error");
             }
 
             app.UseHsts();
@@ -69,6 +73,7 @@ namespace AzureMediaStreaming
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
             app.UseRouting();
+            app.UseMvc();
 
             app.UseEndpoints(endpoints =>
             {
@@ -76,6 +81,7 @@ namespace AzureMediaStreaming
                     name: "default",
                     pattern: "{controller}/{action=Index}/{id?}");
             });
+
 
             app.UseSpa(spa =>
             {
