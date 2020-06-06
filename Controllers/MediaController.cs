@@ -48,12 +48,31 @@ namespace AzureMediaStreaming.Controllers
 
         }
 
-        // [HttpGet]
-        // [Route("[action]")]
-        // public async Task Doit([FromServices] IAzureStreamingService azureStreamingService)
-        // {
-        //     await azureStreamingService.UploadAndRetrieve();
-        // }
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IActionResult> TestJson()
+        {
+            // TODO: Implement everything
+            string locatorName = "locator-c7943896de4d4cb6a6484fc878028fd7";
+            _logger.LogInformation("Getting streaming");
+            try
+            {
+                var videoUrls = await _azureMediaService.GetStreamingUrlsAsync(locatorName);
+                string videoUrl = videoUrls.FirstOrDefault();
+
+                return Ok(new VideoModel
+                {
+                    VideoName = "Demo Video",
+                    VideoUrl = videoUrl
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "An error has occured trying to obtain data");
+                return BadRequest(e);
+            }
+
+        }
 
         [HttpGet]
         [Route("[action]")]
