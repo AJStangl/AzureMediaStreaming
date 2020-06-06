@@ -42,6 +42,7 @@ namespace AzureMediaStreaming.Controllers
             catch (Exception e)
             {
                 _logger.LogError(e, "An error has occured trying to obtain data");
+                return BadRequest(e);
                 throw;
             }
 
