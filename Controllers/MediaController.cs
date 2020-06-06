@@ -47,18 +47,18 @@ namespace AzureMediaStreaming.Controllers
 
         }
 
-        [HttpGet]
-        [Route("[action]")]
-        public async Task Doit([FromServices] IAzureStreamingService azureStreamingService)
-        {
-            await azureStreamingService.UploadAndRetrieve();
-        }
+        // [HttpGet]
+        // [Route("[action]")]
+        // public async Task Doit([FromServices] IAzureStreamingService azureStreamingService)
+        // {
+        //     await azureStreamingService.UploadAndRetrieve();
+        // }
 
-        [HttpGet]
-        [Route("[action]")]
-        public IActionResult Settings([FromServices] IConfiguration configuration)
-        {
-            return Ok(configuration.GetSection(nameof(ClientSettings)).Get<ClientSettings>());
-        }
+        // [HttpGet]
+        // [Route("[action]")]
+        // public IActionResult Settings([FromServices] IConfiguration configuration)
+        // {
+        //     return Ok(configuration.GetSection(nameof(ClientSettings)).Get<ClientSettings>());
+        // }
     }
 }

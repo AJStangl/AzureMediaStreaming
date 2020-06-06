@@ -1,4 +1,5 @@
 ﻿import React, {Component} from 'react';
+import Player from "./Player";
 
 export class VideoPlayer extends Component {
     static displayName = VideoPlayer.name;
@@ -13,19 +14,13 @@ export class VideoPlayer extends Component {
     }
 
     static renderVideo(videoData) {
+        var sourceVideo = {
+            "src": videoData.videoUrl,
+            "type": "application/vnd.ms-sstr+xml"
+        };
+        console.log(sourceVideo);
         return (
-            <div>
-                <iframe
-                    src={"//aka.ms/ampembed?url=" + videoData.videoUrl}
-                    name="azuremediaplayer"
-                    scrolling="no"
-                    frameBorder="no"
-                    align="center"
-                    height="280px"
-                    width="500px"
-                    allowFullScreen>
-                </iframe>
-             </div>
+            <Player sourceVideo={sourceVideo} />
         );
     }
 
