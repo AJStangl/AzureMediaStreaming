@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using AzureMediaStreaming.AzureServices;
 using AzureMediaStreaming.Settings;
 using AzureMediaStreaming.ViewModels;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -14,21 +15,44 @@ namespace AzureMediaStreaming.Controllers
     [Route("[controller]")]
     public class MediaController : ControllerBase
     {
+        private readonly IAzureStreamingService _azureStreamingService;
         private readonly IAzureMediaService _azureMediaService;
         private readonly ILogger<MediaController> _logger;
 
-        public MediaController(IAzureMediaService azureMediaService, ILogger<MediaController> logger)
+        public MediaController(
+            IAzureStreamingService azureStreaming,
+            IAzureMediaService azureMediaService,
+            ILogger<MediaController> logger)
         {
             _azureMediaService = azureMediaService;
+            _azureStreamingService = azureStreaming;
             _logger = logger;
+        }
+
+        [HttpPost]
+        [Route("[action]")]
+        public async Task Video([FromForm(Name = "file")] IFormFile formFile)
+        {
+            // TODO: All sorts of stuff to validate that this is a file we want to save.
+            // Upload the file if less than ~30 MB
+            if (formFile.Length < 30000000)
+            {
+                // TODO: Do stuff here like add a loading icon
+                var foo = await _azureStreamingService.UploadFileAsync(formFile);
+            }
+            else
+            {
+                // TODO: Add some sort of useful error page
+                ModelState.AddModelError("File", "The file is too large.");
+            }
         }
 
         [HttpGet]
         [Route("[action]")]
         public async Task<VideoModel> Video()
         {
-            // TODO: Implement everything
-            string locatorName = "locator-c7943896de4d4cb6a6484fc878028fd7";
+            // TODO: Implement Search for videos
+            string locatorName = "locator-ca2fc45b-7b10-41de-a68e-baea2d532f5f-20200607_072358.mp4";
             _logger.LogInformation("Getting streaming");
             try
             {
@@ -48,22 +72,10 @@ namespace AzureMediaStreaming.Controllers
             }
         }
 
-        [HttpGet]
-        public async Task<VideoModel> Get()
+        public RedirectResult Error()
         {
-            return new VideoModel
-            {
-                VideoName = "Demo Video",
-                VideoUrl =
-                    "https://ajstangl-usea.streaming.media.azure.net/fc8b5b35-a2ca-4dbf-99c8-4740726e2529/Ignite-short.ism/manifest(format=m3u8-aapl)"
-            };
-        }
-
-        [HttpGet]
-        [Route("[action]")]
-        public IActionResult Settings([FromServices] IConfiguration configuration)
-        {
-            return Ok(configuration.GetSection(nameof(ClientSettings)).Get<ClientSettings>());
+            // TODO: Actually have this do something
+            return Redirect("/Error");
         }
     }
 }

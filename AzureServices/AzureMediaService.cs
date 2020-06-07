@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AzureMediaStreaming.Controllers.Models;
 using AzureMediaStreaming.Settings;
 using EnsureThat;
 using Microsoft.Azure.Management.Media;
@@ -29,13 +30,15 @@ namespace AzureMediaStreaming.AzureServices
             _azureMediaServicesClient = GetAzureMediaServicesClient();
         }
 
-
-        public async Task<Transform> GetOrCreateTransformAsync(string transformName)
+        public async Task<Transform> GetOrCreateTransformAsync()
         {
-            EnsureArg.IsNotEmptyOrWhiteSpace(transformName, nameof(transformName));
-
-            Transform transform = await _azureMediaServicesClient.Transforms.GetAsync(_clientSettings.ResourceGroup,
-                _clientSettings.AccountName, transformName);
+            const string adaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
+            Transform transform = await _azureMediaServicesClient
+                .Transforms
+                .GetAsync(
+                    _clientSettings.ResourceGroup,
+                    _clientSettings.AccountName,
+                    adaptiveStreamingTransformName);
 
             if (transform != null) return transform;
 
@@ -50,68 +53,78 @@ namespace AzureMediaStreaming.AzureServices
                     }
                 }
             };
-
             transform = await _azureMediaServicesClient.Transforms.CreateOrUpdateAsync(_clientSettings.ResourceGroup,
-                _clientSettings.AccountName, transformName, output);
+                _clientSettings.AccountName, adaptiveStreamingTransformName, output);
 
             return transform;
         }
-
-        public async Task<Asset> CreateOutputAssetAsync(string assetName)
+        /// <summary>
+        /// Calls media service to check if an asset exists and if not to create one, store it in blob and return the
+        /// asset.
+        /// </summary>
+        public async Task<Asset> CreateInputAssetAsync(MediaAsset mediaAssetFileDto)
         {
-            EnsureArg.IsNotEmptyOrWhiteSpace(assetName, nameof(assetName));
-
-            Asset outputAsset =
-                await _azureMediaServicesClient.Assets.GetAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName, assetName);
-            Asset asset = new Asset();
-            string outputAssetName = assetName;
-
-            if (outputAsset != null)
-            {
-                string uniqueness = $"-{Guid.NewGuid().ToString("N")}";
-                outputAssetName += uniqueness;
-                _logger.LogWarning("Warning – found an existing Asset with name = " + assetName);
-                _logger.LogInformation("Creating an Asset with this name instead: " + outputAssetName);
-            }
-
-            return await _azureMediaServicesClient.Assets.CreateOrUpdateAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName,
-                outputAssetName, asset);
-        }
-
-        public async Task<Asset> CreateInputAssetAsync(string assetName,
-            string fileToUpload)
-        {
+            // TODO: This inital check will be performed by a database call to get back the metadata associated with the asset
             Asset asset = await _azureMediaServicesClient.Assets.CreateOrUpdateAsync(_clientSettings.ResourceGroup,
-                _clientSettings.AccountName, assetName, new Asset());
+                _clientSettings.AccountName, mediaAssetFileDto.InputAssetName, new Asset());
 
+            // Use Media Services API to get back a response that contains SAS URL for the Asset container into which to
+            // upload blobs. That is where you would specify read-write permissions and the expiration time for the SAS
+            // URL.
             var response = await _azureMediaServicesClient.Assets.ListContainerSasAsync(
                 _clientSettings.ResourceGroup,
                 _clientSettings.AccountName,
-                assetName,
-                permissions: AssetContainerPermission.ReadWrite,
-                expiryTime: DateTime.UtcNow.AddHours(4).ToUniversalTime());
+                mediaAssetFileDto.InputAssetName,
+                AssetContainerPermission.ReadWrite,
+                DateTime.UtcNow.AddHours(4).ToUniversalTime());
 
             var sasUri = new Uri(response.AssetContainerSasUrls.First());
 
+            // Use Storage API to get a reference to the Asset container that was created by calling Asset's
+            // CreateOrUpdate method.
             CloudBlobContainer container = new CloudBlobContainer(sasUri);
-            var blob = container.GetBlockBlobReference(Path.GetFileName(fileToUpload));
 
-            await blob.UploadFromFileAsync(fileToUpload);
+            var blob = container.GetBlockBlobReference(mediaAssetFileDto.FormFile.FileName);
+
+            // Use Storage API to upload the file into the container in storage.
+            await blob.UploadFromStreamAsync(mediaAssetFileDto.FormFile.OpenReadStream());
 
             return asset;
         }
 
-        public async Task<Job> SubmitJobAsync(string transformName, string outputAssetName, string jobName)
+        public async Task<Asset> CreateOutputAssetAsync(string inputAssetName, string outputAssetName)
         {
-            JobInputHttp jobInput =
-                new JobInputHttp(files: new[]
-                {
-                    "https://ajstangl.blob.core.windows.net/asset-0ce38fc1-77cc-4c8f-ad68-398ffb401032/ch01-20200524-224458-224511-103000000000.avi?sv=2017-04-17&sr=c&si=4babe4e2-2852-47e3-b2ac-2dacb3ea5a45&sig=3cs3aNGMT8Ymkxs3xb1MLNGwKSt1FUQjSoyX%2Byzks3s%3D&st=2020-05-31T18%3A23%3A46Z&se=2120-05-31T18%3A23%3A46Z"
-                });
+            EnsureArg.IsNotEmptyOrWhiteSpace(inputAssetName, nameof(inputAssetName));
+            EnsureArg.IsNotEmptyOrWhiteSpace(outputAssetName, nameof(outputAssetName));
+            Asset asset = new Asset();
+            return await _azureMediaServicesClient.Assets.CreateOrUpdateAsync(
+                _clientSettings.ResourceGroup,
+                _clientSettings.AccountName,
+                outputAssetName,
+                asset);
+            // TODO: Hypothetically we should be able to check if the asset exists and if it does we should not add anything
+            // Check if an asset already exists.
+            // Asset outputAsset =
+            //     await _azureMediaServicesClient
+            //         .Assets
+            //         .GetAsync(
+            //             _clientSettings.ResourceGroup,
+            //             _clientSettings.AccountName,
+            //             inputAssetName);
+        }
+
+        public async Task<Job> SubmitJobAsync(
+            string transformName,
+            string jobName,
+            string inputAssetName,
+            string outputAssetName)
+        {
+            // Use the name of the created input asset to create the job input.
+            JobInput jobInput = new JobInputAsset(assetName: inputAssetName);
 
             JobOutput[] jobOutputs =
             {
-                new JobOutputAsset(outputAssetName),
+                new JobOutputAsset(outputAssetName)
             };
 
             Job job = await _azureMediaServicesClient.Jobs.CreateAsync(
@@ -128,8 +141,7 @@ namespace AzureMediaStreaming.AzureServices
             return job;
         }
 
-        public async Task<Job> WaitForJobToFinishAsync(string transformName,
-            string jobName)
+        public async Task<Job> WaitForJobToFinishAsync(string transformName, string jobName)
         {
             // TODO: Use an event grid https://docs.microsoft.com/en-us/azure/media-services/latest/monitor-events-portal-how-to
             const int sleepIntervalMinutes = 60 * 1000;
@@ -217,9 +229,9 @@ namespace AzureMediaStreaming.AzureServices
             return streamingUrls;
         }
 
-        public async Task DownloadOutputAssetAsync(string assetName,
-            string outputFolderName)
+        public async Task DownloadOutputAssetAsync(string assetName)
         {
+            const string outputFolderName = @"Output";
             if (!Directory.Exists(outputFolderName))
             {
                 Directory.CreateDirectory(outputFolderName);
@@ -271,8 +283,7 @@ namespace AzureMediaStreaming.AzureServices
             _logger.LogInformation("Download complete.");
         }
 
-        public async Task CleanUpAsync(string transformName, List<string> assetNames,
-            string jobName)
+        public async Task CleanUpAsync(string transformName, List<string> assetNames, string jobName)
         {
             await _azureMediaServicesClient.Jobs.DeleteAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName, transformName,
                 jobName);
@@ -283,16 +294,15 @@ namespace AzureMediaStreaming.AzureServices
                     assetName);
             });
         }
+
         private AzureMediaServicesClient GetAzureMediaServicesClient()
         {
-
             ClientCredential clientCredential =
                 new ClientCredential(_clientSettings?.AadClientId, _clientSettings?.AadSecret);
-            var serviceClientCredentials = ApplicationTokenProvider.LoginSilentAsync(_clientSettings?.AadTenantId,
-                clientCredential, ActiveDirectoryServiceSettings.Azure).Result;
-            return new AzureMediaServicesClient(_clientSettings.ArmEndpoint, serviceClientCredentials)
+            var serviceClientCredentials = ApplicationTokenProvider.LoginSilentAsync(_clientSettings?.AadTenantId, clientCredential, ActiveDirectoryServiceSettings.Azure).Result;
+            return new AzureMediaServicesClient(_clientSettings?.ArmEndpoint, serviceClientCredentials)
             {
-                SubscriptionId = _clientSettings.SubscriptionId,
+                SubscriptionId = _clientSettings?.SubscriptionId,
             };
         }
     }

@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using AzureMediaStreaming.AzureServices;
+using AzureMediaStreaming.Context;
 using AzureMediaStreaming.Settings;
 using EnsureThat;
 using Microsoft.AspNetCore.Builder;
@@ -7,9 +7,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Azure.Management.Media;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest.Azure.Authentication;
@@ -37,6 +37,8 @@ namespace AzureMediaStreaming
             services.AddTransient<IAzureMediaServicesClient>(x => GetAzureMediaServicesClient());
             services.AddTransient<IAzureMediaService, AzureMediaService>();
             services.AddTransient<IAzureStreamingService, AzureStreamingService>();
+            services.AddTransient<IAssetContext, AssetContext>();
+
             services.AddAntiforgery(o =>
             {
                 o.SuppressXFrameOptionsHeader = true;
@@ -54,6 +56,11 @@ namespace AzureMediaStreaming
                 });
             });
             services.AddApplicationInsightsTelemetry();
+
+            services.AddDbContextPool<AssetContext>(options =>
+            {
+                options.UseSqlServer(_configuration["ConnectionStrings:AssetDatabase"]);
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
