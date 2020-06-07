@@ -59,7 +59,7 @@ namespace AzureMediaStreaming
 
             services.AddDbContextPool<AssetContext>(options =>
             {
-                options.UseSqlServer(_configuration["ConnectionStrings:AssetDatabase"]);
+                options.UseSqlServer(_configuration.GetConnectionString("AssetDatabase"));
             });
         }
 
