@@ -1,4 +1,4 @@
-﻿namespace AzureMediaStreaming.ViewModels
+namespace AzureMediaStreaming.DataModels
 {
     public class VideoModel
     {

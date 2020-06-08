@@ -1,12 +1,11 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AzureMediaStreaming.AzureServices;
-using AzureMediaStreaming.Settings;
-using AzureMediaStreaming.ViewModels;
+using AzureMediaStreaming.DataModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace AzureMediaStreaming.Controllers
@@ -15,8 +14,8 @@ namespace AzureMediaStreaming.Controllers
     [Route("[controller]")]
     public class MediaController : ControllerBase
     {
-        private readonly IAzureStreamingService _azureStreamingService;
         private readonly IAzureMediaService _azureMediaService;
+        private readonly IAzureStreamingService _azureStreamingService;
         private readonly ILogger<MediaController> _logger;
 
         public MediaController(
@@ -33,7 +32,7 @@ namespace AzureMediaStreaming.Controllers
         [Route("[action]")]
         public async Task Video([FromForm(Name = "file")] IFormFile formFile)
         {
-            // TODO: All sorts of stuff to validate that this is a file we want to save.
+            throw new FileLoadException("The file is too large.\\nSubmit a file less that 30 Mb.");
             // Upload the file if less than ~30 MB
             if (formFile.Length < 30000000)
             {
@@ -42,40 +41,32 @@ namespace AzureMediaStreaming.Controllers
             }
             else
             {
-                // TODO: Add some sort of useful error page
-                ModelState.AddModelError("File", "The file is too large.");
+                throw new FileLoadException("The file is too large.\\nSubmit a file less that 30 Mb.");
             }
         }
 
         [HttpGet]
         [Route("[action]")]
-        public async Task<VideoModel> Video()
+        public async Task<ActionResult<VideoModel>> Video()
         {
-            // TODO: Implement Search for videos
-            string locatorName = "locator-ca2fc45b-7b10-41de-a68e-baea2d532f5f-20200607_072358.mp4";
+            var locatorName = "locator-ca2fc45b-7b10-41de-a68e-baea2d532f5f-20200607_072358.mp4";
             _logger.LogInformation("Getting streaming");
             try
             {
                 var videoUrls = await _azureMediaService.GetStreamingUrlsAsync(locatorName);
-                string videoUrl = videoUrls.FirstOrDefault();
+                var videoUrl = videoUrls.FirstOrDefault();
 
-                return new VideoModel
+                return Ok(new VideoModel
                 {
                     VideoName = "Demo Video",
                     VideoUrl = videoUrl
-                };
+                });
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An error has occured trying to obtain data");
-                throw;
+                _logger.LogError(e, "An error has occured trying to obtain data.");
+                throw new Exception("An error has occured while obtaining the video.");
             }
-        }
-
-        public RedirectResult Error()
-        {
-            // TODO: Actually have this do something
-            return Redirect("/Error");
         }
     }
 }

@@ -18,8 +18,6 @@ class FileUpload extends React.Component {
         event.preventDefault();
         const data = new FormData(event.target);
         data.set('file', this.state.file);
-
-        // data.set('file', this.state.file);
         await fetch('/media/Video', {
             method: 'POST',
             body: data,
@@ -39,7 +37,6 @@ class FileUpload extends React.Component {
             </div>
 
         )
-
     }
 
 }
