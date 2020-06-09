@@ -30,6 +30,30 @@ code {
   opacity: 0;
 }
 
+.form-group.required .control-label:after {
+  content: "*";
+  color: red;
+}
+
+.was-validated .form-control:valid {
+  border-color: #ced4da;
+}
+
+.invalid-tooltip {
+  top: 80%;
+  position: static;
+}
+
+.invalid {
+  color: red;
+  display: none;
+}
+
+.valid {
+  color: green;
+  display: none;
+}
+
 @keyframes load8 {
   0% {
     transform: rotate(0deg);

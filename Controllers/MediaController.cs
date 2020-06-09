@@ -30,9 +30,22 @@ namespace AzureMediaStreaming.Controllers
 
         [HttpPost]
         [Route("[action]")]
-        public async Task Video([FromForm(Name = "file")] IFormFile formFile)
+        public async Task<ActionResult> Video([FromForm(Name = "file")] IFormFile formFile)
         {
-            throw new FileLoadException("The file is too large.\\nSubmit a file less that 30 Mb.");
+            try
+            {
+                _logger.LogInformation("Starting upload...");
+                await Task.Delay(new TimeSpan(0, 0, 10));
+                throw new FileLoadException(
+                    $"An error has occured while uploading the file. {HttpContext.TraceIdentifier}");
+            }
+            catch (FileLoadException fileLoadException)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, fileLoadException);
+            }
+
+
+            // throw new FileLoadException("The file is too large.\\nSubmit a file less that 30 Mb.");
             // Upload the file if less than ~30 MB
             if (formFile.Length < 30000000)
             {
