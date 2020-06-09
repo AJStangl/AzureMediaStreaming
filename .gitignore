@@ -235,3 +235,4 @@ appsettings.*.*
 
 .idea
 /.idea/
+/appsetting.Development.json
