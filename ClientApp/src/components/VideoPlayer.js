@@ -1,5 +1,6 @@
 ﻿import React, {Component} from 'react';
 import AzureMediaPlayer from "./AzureMediaPlayer";
+import Loader from "./Loader";
 
 export class VideoPlayer extends Component {
     static displayName = VideoPlayer.name;
@@ -26,7 +27,10 @@ export class VideoPlayer extends Component {
 
     static renderLoading() {
         return (
-            <p><em>Loading...</em></p>
+            <div>
+                <Loader/>
+                <p><em>Loading...</em></p>
+            </div>
         )
     }
 
@@ -52,6 +56,7 @@ export class VideoPlayer extends Component {
         if (this.state.videoData === null) {
             contents = VideoPlayer.renderLoading()
         }
+        // Maybe not the best practice
         if (this.state.error === true) {
             throw new Error(this.state.errorMessage)
         }
