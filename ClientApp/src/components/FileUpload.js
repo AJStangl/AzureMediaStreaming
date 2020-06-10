@@ -47,10 +47,13 @@ class FileUpload extends React.Component {
 
     async handleSubmit(event) {
         event.preventDefault();
-        console.log(event)
+
         const data = new FormData(event.target);
         data.set('file', this.state.file);
-        this.setState({loading: true})
+
+        this.setState({
+            loading: true
+        })
         await fetch('/media/video', {
             method: 'POST',
             body: data,
@@ -253,7 +256,6 @@ class FileUpload extends React.Component {
             </div>
         )
     }
-
 
     render() {
         let contents = null;
