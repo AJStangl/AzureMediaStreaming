@@ -5,7 +5,7 @@ import {Home} from './components/Home';
 import {FetchData} from './components/FetchData';
 import {Counter} from './components/Counter';
 import {VideoPlayer} from "./components/VideoPlayer";
-import FileUpload from "./components/FileUpload";
+import VideoUpload from "./components/VideoUpload";
 import './custom.css'
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -21,7 +21,7 @@ export default class App extends Component {
                     <Route path='/counter' component={Counter}/>
                     <Route path='/fetch-data' component={FetchData}/>
                     <Route path='/fetch-video' component={VideoPlayer}/>
-                    <Route path='/upload-video' component={FileUpload}/>
+                    <Route path='/upload-video' component={VideoUpload}/>
                 </ErrorBoundary>
             </Layout>
         );

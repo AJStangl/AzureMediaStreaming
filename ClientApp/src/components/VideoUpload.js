@@ -2,7 +2,7 @@
 import {Card} from "reactstrap";
 import Loader from "./Loader";
 
-class FileUpload extends React.Component {
+class VideoUpload extends React.Component {
 
     constructor(props) {
         super(props);
@@ -16,8 +16,7 @@ class FileUpload extends React.Component {
                 lastName: '',
                 email: '',
                 phoneNumber: '',
-                streetName: '',
-                streetNumber: '',
+                street: '',
                 zipCode: '',
                 city: '',
                 state: '',
@@ -49,7 +48,7 @@ class FileUpload extends React.Component {
         event.preventDefault();
 
         const data = new FormData(event.target);
-        data.set('file', this.state.file);
+        data.set('file', this.state.form.file);
 
         this.setState({
             loading: true
@@ -60,24 +59,36 @@ class FileUpload extends React.Component {
         }).then(async response => {
             if (response.ok) {
                 await response.json().then(x => {
-                    console.log("I am in the json promise" + x)
-                    this.setState({complete: true, loading: false})
+                    this.setState({
+                        complete: true,
+                        loading: false
+                    })
                 })
-                this.setState({complete: true, loading: false})
-            } else {
                 this.setState({
-                    complete: false,
-                    loading: false,
-                    error: true,
-                    errorMessage: response.statusText
+                    complete: true,
+                    loading: false
+                })
+            } else {
+                // Get the error message:
+
+                await response.json().then(x => {
+                    console.log(x.errorMessage);
+                    this.setState({
+                        complete: false,
+                        loading: false,
+                        error: true,
+                        errorMessage: x.errorMessage
+                    })
+                }).catch(e => {
+                    this.setState({
+                        complete: false,
+                        loading: false,
+                        error: true,
+                        errorMessage: response.statusText
+                    })
                 })
             }
-        }).catch(err =>
-            this.setState({
-                loading: false,
-                error: true,
-                errorMessage: err
-            }));
+        });
     }
 
     RenderLoading() {
@@ -95,6 +106,17 @@ class FileUpload extends React.Component {
             <div className="container-fluid">
                 <h1>File Upload</h1>
                 <p>File Uploaded</p>
+            </div>
+        );
+    }
+
+    RenderHandledError() {
+        return (
+            <div>
+                <h1>Something Went Wrong</h1>
+                <h2>
+                    {this.state.errorMessage}
+                </h2>
             </div>
         );
     }
@@ -160,25 +182,14 @@ class FileUpload extends React.Component {
                         <Card>
                             {/*Address Demographics*/}
                             <div className={'form-row'}>
-                                {/*streetNumber*/}
+                                {/*street*/}
                                 <div className="col-md-6">
                                     <div className="form-group required">
                                         <label className="font-weight-bold">Street Number</label>
                                         <input type="text"
-                                               name="streetNumber"
+                                               name="street"
                                                className={'form-control user-input'}
-                                               placeholder="streetNumber" value={this.state.form["streetNumber"]}
-                                               onChange={this.handleChange.bind(this)}/>
-                                    </div>
-                                </div>
-                                {/*streetName*/}
-                                <div className="col-md-6">
-                                    <div className="form-group required">
-                                        <label className="font-weight-bold">Street Name</label>
-                                        <input type="text"
-                                               name="streetName"
-                                               className={'form-control user-input'}
-                                               placeholder="streetName" value={this.state.form["streetName"]}
+                                               placeholder="street" value={this.state.form["street"]}
                                                onChange={this.handleChange.bind(this)}/>
                                     </div>
                                 </div>
@@ -201,7 +212,7 @@ class FileUpload extends React.Component {
                                                name="city"
                                                className={'form-control user-input'}
                                                placeholder="city" value={'Baltimore'}
-                                               readOnly={'true'}
+                                               readOnly={true}
                                         />
                                     </div>
                                 </div>
@@ -213,7 +224,7 @@ class FileUpload extends React.Component {
                                                name="state"
                                                className={'form-control user-input'}
                                                placeholder="city" value={'Md'}
-                                               readOnly={'true'}
+                                               readOnly={true}
                                         />
                                     </div>
                                 </div>
@@ -229,7 +240,7 @@ class FileUpload extends React.Component {
                                         <input type="date"
                                                name="date"
                                                className={'form-control user-input'}
-                                               placeholder="streetNumber" value={this.state.form["date"]}
+                                               value={this.state.form["date"]}
                                                onChange={this.handleChange.bind(this)}/>
                                     </div>
                                 </div>
@@ -240,7 +251,7 @@ class FileUpload extends React.Component {
                                         <input type="time"
                                                name="time"
                                                className={'form-control user-input'}
-                                               placeholder="streetNumber" value={this.state.form["time"]}
+                                               value={this.state.form["time"]}
                                                onChange={this.handleChange.bind(this)}/>
                                     </div>
                                 </div>
@@ -259,7 +270,7 @@ class FileUpload extends React.Component {
 
     render() {
         let contents = null;
-        console.log(this.state)
+        // console.log(this.state)
         if (this.state.loading === false) {
             contents = this.SetForm()
         }
@@ -267,7 +278,7 @@ class FileUpload extends React.Component {
             contents = this.RenderLoading()
         }
         if (this.state.error === true) {
-            throw new Error(this.state.errorMessage)
+            contents = this.RenderHandledError()
         }
         if (this.state.loading === false && this.state.complete === true) {
             contents = this.RenderComplete()
@@ -281,4 +292,4 @@ class FileUpload extends React.Component {
     }
 }
 
-export default FileUpload
+export default VideoUpload

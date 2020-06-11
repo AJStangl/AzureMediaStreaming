@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using AzureMediaStreaming.Context.Models;
-using AzureMediaStreaming.Controllers.Models;
+using AzureMediaStreaming.DataModels.Context;
+using AzureMediaStreaming.DataModels.Models;
 
 namespace AzureMediaStreaming.Context
 {

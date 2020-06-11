@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AzureMediaStreaming.Context;
-using AzureMediaStreaming.Context.Models;
-using AzureMediaStreaming.Controllers.Models;
+using AzureMediaStreaming.DataModels.Context;
+using AzureMediaStreaming.DataModels.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Logging;
@@ -16,13 +16,14 @@ namespace AzureMediaStreaming.AzureServices
         public Task<IList<string>> UploadFileAsync(IFormFile formFile);
     }
 
-    class AzureStreamingService : IAzureStreamingService
+    internal class AzureStreamingService : IAzureStreamingService
     {
-        private readonly IAzureMediaService _azureMediaService;
         private readonly IAssetContext _assetContext;
+        private readonly IAzureMediaService _azureMediaService;
         private readonly ILogger<AzureStreamingService> _logger;
 
-        public AzureStreamingService(ILogger<AzureStreamingService> logger, IAzureMediaService azureMediaService, IAssetContext assetContext)
+        public AzureStreamingService(ILogger<AzureStreamingService> logger, IAzureMediaService azureMediaService,
+            IAssetContext assetContext)
         {
             _logger = logger;
             _azureMediaService = azureMediaService;
@@ -35,10 +36,7 @@ namespace AzureMediaStreaming.AzureServices
             var assetFile = new MediaAsset(Guid.NewGuid(), formFile);
             var asset = await _assetContext.GetAssetsByName(assetFile.FormFile.FileName);
 
-            if (asset != null)
-            {
-                return asset.StreamingUrl.Select(x => x.Url).ToList();
-            }
+            if (asset != null) return asset.StreamingUrl.Select(x => x.Url).ToList();
 
             _logger.LogInformation("Creating input asset...");
             var inputAsset = await _azureMediaService.CreateInputAssetAsync(assetFile);
@@ -77,7 +75,7 @@ namespace AzureMediaStreaming.AzureServices
             var streamingUrls = urls.Select(url => new StreamingUrl
             {
                 Url = url,
-                AssetEntityId = assetFile.UniqueId,
+                AssetEntityId = assetFile.UniqueId
             }).ToHashSet();
 
             assetFile.StreamingUrls = streamingUrls;

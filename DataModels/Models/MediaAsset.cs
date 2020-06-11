@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using AzureMediaStreaming.Context.Models;
+using AzureMediaStreaming.DataModels.Context;
 using Microsoft.AspNetCore.Http;
 
-namespace AzureMediaStreaming.Controllers.Models
+namespace AzureMediaStreaming.DataModels.Models
 {
     public class MediaAsset
     {
@@ -26,19 +26,5 @@ namespace AzureMediaStreaming.Controllers.Models
         public string JobName { get; set; }
         public string LocatorName { get; set; }
         public ICollection<StreamingUrl> StreamingUrls { get; set; }
-        public AssetEntity CopyToAssetEntity()
-        {
-            return new AssetEntity
-            {
-                Id = UniqueId,
-                FileName = FormFile.FileName,
-                AssetName = AssetName,
-                InputAssetName = InputAssetName,
-                OutputAssetName = OutputAssetName,
-                JobName = JobName,
-                LocatorName = LocatorName,
-                StreamingUrl = StreamingUrls
-            };
-        }
     }
 }

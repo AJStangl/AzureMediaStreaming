@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace AzureMediaStreaming.Context.Models
+namespace AzureMediaStreaming.DataModels.Context
 {
     public class AssetEntity : BaseEntity
     {
-        public AssetEntity()
+        private AssetEntity()
         {
             StreamingUrl = new HashSet<StreamingUrl>();
         }
+
         public string FileName { get; set; }
         public string AssetName { get; set; }
         public string InputAssetName { get; set; }
@@ -17,6 +18,11 @@ namespace AzureMediaStreaming.Context.Models
         public string JobName { get; set; }
         public string LocatorName { get; set; }
         public virtual ICollection<StreamingUrl> StreamingUrl { get; set; }
+
+        internal static AssetEntity CreateInstance()
+        {
+            return new AssetEntity();
+        }
     }
 
     public class StreamingUrl : BaseEntity

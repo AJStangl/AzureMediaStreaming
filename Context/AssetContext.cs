@@ -1,4 +1,4 @@
-﻿using AzureMediaStreaming.Context.Models;
+﻿using AzureMediaStreaming.DataModels.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,9 +9,12 @@ namespace AzureMediaStreaming.Context
         private const string NewGuidSql = "NEWID()";
         private const string GetDateSql = "GETDATE()";
 
+        public AssetContext(DbContextOptions<AssetContext> options) : base(options)
+        {
+        }
+
         public DbSet<AssetEntity> AssetEntities { get; set; }
         public DbSet<StreamingUrl> StreamingUrls { get; set; }
-        public AssetContext(DbContextOptions<AssetContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
