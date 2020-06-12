@@ -8,7 +8,7 @@ namespace AzureMediaStreaming.Context
     public interface IAssetContext
     {
         public Task<AssetEntity> GetAssetsByName(string assetName);
-        public Task CreateUpdateAssetEntity(MediaAsset mediaAsset);
+        public Task<AssetEntity> CreateUpdateAssetEntity(MediaAsset mediaAsset);
         public List<StreamingUrl> GetStreamingUrl();
     }
 }

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using AzureMediaStreaming.Context;
 using AzureMediaStreaming.Context.Models;
@@ -12,7 +11,7 @@ namespace AzureMediaStreaming.AzureServices
 {
     public interface IAzureStreamingService
     {
-        public Task<IList<string>> UploadFileAsync(VideoUploadRequest videoRequest);
+        public Task<AssetEntity> UploadFileAsync(VideoUploadRequest videoRequest);
     }
 
     internal class AzureStreamingService : IAzureStreamingService
@@ -29,14 +28,14 @@ namespace AzureMediaStreaming.AzureServices
             _assetContext = assetContext;
         }
 
-        public async Task<IList<string>> UploadFileAsync(VideoUploadRequest videoRequest)
+        public async Task<AssetEntity> UploadFileAsync(VideoUploadRequest videoRequest)
         {
             _logger.LogInformation("Starting Upload...");
 
             var mediaAsset = MediaAsset.CreateInstance(videoRequest);
             var asset = await _assetContext.GetAssetsByName(mediaAsset.AssetName);
 
-            if (asset != null) return asset.StreamingUrl.Select(x => x.Url).ToList();
+            if (asset != null) return asset;
 
             _logger.LogInformation("Creating input asset...");
             var inputAsset = await _azureMediaService.CreateInputAssetAsync(mediaAsset);
@@ -80,8 +79,8 @@ namespace AzureMediaStreaming.AzureServices
 
             mediaAsset.StreamingUrls = streamingUrls;
             _logger.LogInformation("Storing Results in database...");
-            await _assetContext.CreateUpdateAssetEntity(mediaAsset);
-            return urls;
+            var assetEntity = await _assetContext.CreateUpdateAssetEntity(mediaAsset);
+            return assetEntity;
         }
     }
 }

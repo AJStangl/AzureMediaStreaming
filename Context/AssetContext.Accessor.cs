@@ -11,7 +11,7 @@ namespace AzureMediaStreaming.Context
 {
     public partial class AssetContext
     {
-        public async Task CreateUpdateAssetEntity(MediaAsset mediaAsset)
+        public async Task<AssetEntity> CreateUpdateAssetEntity(MediaAsset mediaAsset)
         {
             var assetEntity = AssetEntity.CreateInstance();
             assetEntity.Id = Guid.NewGuid();
@@ -46,6 +46,7 @@ namespace AzureMediaStreaming.Context
             };
             await AssetEntities.AddAsync(assetEntity);
             await SaveChangesAsync();
+            return assetEntity;
         }
 
         public async Task<AssetEntity> GetAssetsByName(string filename)

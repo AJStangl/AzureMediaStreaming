@@ -63,7 +63,6 @@ export class VideoPlayer extends Component {
         if (this.state.loading === true) {
             contents = VideoPlayer.renderLoading()
         } else {
-            console.log("Video is rendering...")
             title = this.state.videoData?.videoName;
             contents = VideoPlayer.renderVideo(this.state.videoData)
         }

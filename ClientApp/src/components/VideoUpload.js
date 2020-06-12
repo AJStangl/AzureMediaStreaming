@@ -69,10 +69,7 @@ class VideoUpload extends React.Component {
                     loading: false
                 })
             } else {
-                // Get the error message:
-
                 await response.json().then(x => {
-                    console.log(x.errorMessage);
                     this.setState({
                         complete: false,
                         loading: false,

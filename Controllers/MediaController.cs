@@ -62,18 +62,21 @@ namespace AzureMediaStreaming.Controllers
         public async Task<IActionResult> Video([FromForm] VideoUploadRequest videoUploadRequest)
         {
             _logger.LogInformation("Starting upload...");
+            try
+            {
+                var result = await _azureStreamingService.UploadFileAsync(videoUploadRequest);
+                return new VideoResult(result, StatusCodes.Status200OK);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError("Error uploading", exception);
+                var error = VideoResultError.CreateInstance(
+                    "An error has occured attempting to upload the video.",
+                    HttpContext,
+                    ErrorType.Generic);
 
-            // TODO: Fire and Forget or wait and load?
-            await Task.Delay(new TimeSpan(0, 0, 3));
-
-            var foo = VideoResultError.CreateInstance(
-                "Just Dont...",
-                HttpContext,
-                ErrorType.Generic);
-
-            var result = new VideoResult(foo, StatusCodes.Status422UnprocessableEntity);
-            return result;
-            await _azureStreamingService.UploadFileAsync(videoUploadRequest);
+                return new VideoResult(error, StatusCodes.Status422UnprocessableEntity);
+            }
         }
 
         [HttpGet]

@@ -32,7 +32,6 @@ class Player extends Component {
         });
 
         video.addEventListener(amp.eventName.error, (errorDetails) => {
-            console.log(errorDetails);
         });
 
         return video;
