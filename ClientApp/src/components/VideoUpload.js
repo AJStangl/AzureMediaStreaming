@@ -101,13 +101,41 @@ class VideoUpload extends React.Component {
     }
 
     RenderComplete() {
-        // TODO: Pass back information about the response.
         return (
             <div className="container-fluid">
                 <h1>File Upload</h1>
                 <p>File Uploaded</p>
             </div>
         );
+    }
+
+    renderRow(name, display, type) {
+        return <div className="col-md-6">
+            <div className="form-group">
+                <label className="font-weight-bold">{display}</label>
+                <input type={type}
+                       name={name}
+                       className={'form-control user-input'}
+                       placeholder={name} value={this.state.form[name]}
+                       required={true}
+                       onChange={this.handleChange.bind(this)}/>
+            </div>
+        </div>
+    }
+
+    renderStaticRow(name, value, display) {
+        return (
+            <div className="col-md-6">
+                <div className="form-group">
+                    <label className="font-weight-bold">{display}</label>
+                    <input type="text"
+                           name={name}
+                           className={'form-control user-input'}
+                           placeholder="city" value={value}
+                           required={true}
+                           readOnly={true}/>
+                </div>
+            </div>)
     }
 
     RenderHandledError() {
@@ -122,144 +150,32 @@ class VideoUpload extends React.Component {
     }
 
     SetForm() {
-        // TODO: Validate all fields and prevent submission, add tooltip
         return (
             <div className="container-fluid">
-                <form onSubmit={e => this.handleSubmit(e)} noValidate>
+                <form onSubmit={e => this.handleSubmit(e)}>
                     <div className={'info-text'}>
                         <h1>Upload File</h1>
-                        {/*User and Contact Information*/}
                         <Card>
                             <div className={'form-row'}>
                                 {/*Contact Information*/}
-                                {/*firstName*/}
-                                <div className="col-md-6">
-                                    <div className="form-group required">
-                                        <label className="font-weight-bold">First Name</label>
-                                        <input type="text"
-                                               name="firstName"
-                                               className={'form-control user-input'}
-                                               placeholder="firstName" value={this.state.form["firstName"]}
-                                               onChange={this.handleChange.bind(this)}/>
-                                    </div>
-                                </div>
-                                {/*lastName*/}
-                                <div className="col-md-6">
-                                    <div className="form-group required">
-                                        <label className="font-weight-bold">Last Name</label>
-                                        <input type="text"
-                                               name="lastName"
-                                               className={'form-control user-input'}
-                                               placeholder="lastName" value={this.state.form["lastName"]}
-                                               onChange={this.handleChange.bind(this)}/>
-                                    </div>
-                                </div>
-                                {/*phoneNumber*/}
-                                <div className="col-md-6">
-                                    <div className="form-group required">
-                                        <label className="font-weight-bold">Phone Number</label>
-                                        <input type="text"
-                                               name="phoneNumber"
-                                               className={'form-control user-input'}
-                                               placeholder="phoneNumber" value={this.state.form["phoneNumber"]}
-                                               onChange={this.handleChange.bind(this)}/>
-                                    </div>
-                                </div>
-                                {/*email*/}
-                                <div className="col-md-6">
-                                    <div className="form-group required">
-                                        <label className="font-weight-bold">Email Address</label>
-                                        <input type="text"
-                                               name="email"
-                                               className={'form-control user-input'}
-                                               placeholder="email" value={this.state.form["email"]}
-                                               onChange={this.handleChange.bind(this)}/>
-                                    </div>
-                                </div>
+                                {this.renderRow("firstName", "First Name", "text")}
+                                {this.renderRow("lastName", "Last Name", "text")}
+                                {this.renderRow("phoneNumber", "Phone Number", "text")}
+                                {this.renderRow("email", "Email", "text")}
                             </div>
-                        </Card>
-                        {/*Address Information*/}
-                        <Card>
-                            {/*Address Demographics*/}
                             <div className={'form-row'}>
-                                {/*street*/}
-                                <div className="col-md-6">
-                                    <div className="form-group required">
-                                        <label className="font-weight-bold">Street Number</label>
-                                        <input type="text"
-                                               name="street"
-                                               className={'form-control user-input'}
-                                               placeholder="street" value={this.state.form["street"]}
-                                               onChange={this.handleChange.bind(this)}/>
-                                    </div>
-                                </div>
-                                {/*ZipCode*/}
-                                <div className="col-md-6">
-                                    <div className="form-group required">
-                                        <label className="font-weight-bold">Zip Code</label>
-                                        <input type="text"
-                                               name="zipCode"
-                                               className={'form-control user-input'}
-                                               placeholder="zipCode" value={this.state.form["zipCode"]}
-                                               onChange={this.handleChange.bind(this)}/>
-                                    </div>
-                                </div>
-                                {/*City*/}
-                                <div className="col-md-6">
-                                    <div className="form-group required">
-                                        <label className="font-weight-bold">City</label>
-                                        <input type="text"
-                                               name="city"
-                                               className={'form-control user-input'}
-                                               placeholder="city" value={'Baltimore'}
-                                               readOnly={true}
-                                        />
-                                    </div>
-                                </div>
-                                {/*State*/}
-                                <div className="col-md-6">
-                                    <div className="form-group required">
-                                        <label className="font-weight-bold">State</label>
-                                        <input type="text"
-                                               name="state"
-                                               className={'form-control user-input'}
-                                               placeholder="city" value={'Md'}
-                                               readOnly={true}
-                                        />
-                                    </div>
-                                </div>
+                                {this.renderRow("street", "Street Address", "text")}
+                                {this.renderRow("zipCode", "Zip Code", "text")}
+                                {this.renderStaticRow("city", "Baltimore", "City")}
+                                {this.renderStaticRow("state", "Md", "State")}
                             </div>
-                        </Card>
-                        {/*Date and Time*/}
-                        <Card>
                             <div className={'form-row'}>
-                                {/*Date*/}
-                                <div className="col-md-6">
-                                    <div className="form-group required">
-                                        <label className="font-weight-bold">Date</label>
-                                        <input type="date"
-                                               name="date"
-                                               className={'form-control user-input'}
-                                               value={this.state.form["date"]}
-                                               onChange={this.handleChange.bind(this)}/>
-                                    </div>
-                                </div>
-                                {/*Time*/}
-                                <div className="col-md-6">
-                                    <div className="form-group required">
-                                        <label className="font-weight-bold">Time</label>
-                                        <input type="time"
-                                               name="time"
-                                               className={'form-control user-input'}
-                                               value={this.state.form["time"]}
-                                               onChange={this.handleChange.bind(this)}/>
-                                    </div>
-                                </div>
+                                {this.renderRow("date", "Date", "date")}
+                                {this.renderRow("time", "Time", "time")}
                             </div>
-                        </Card>
-                        {/*File*/}
-                        <Card>
-                            <input type="file" onChange={e => this.setFile(e)}/>
+                            <input type="file"
+                                   onChange={e => this.setFile(e)}
+                                   required={true}/>
                         </Card>
                         <button className="btn btn-primary" type="submit">Submit</button>
                     </div>
@@ -270,6 +186,7 @@ class VideoUpload extends React.Component {
 
     render() {
         let contents = null;
+        console.log(this.state)
         // console.log(this.state)
         if (this.state.loading === false) {
             contents = this.SetForm()
