@@ -62,8 +62,11 @@ namespace AzureMediaStreaming.Controllers
         public async Task<IActionResult> Video([FromForm] VideoUploadRequest videoUploadRequest)
         {
             _logger.LogInformation("Starting upload...");
+
+            // TODO: Fire and Forget or wait and load?
             await Task.Delay(new TimeSpan(0, 0, 3));
 
+            await _azureStreamingService.UploadFileAsync(videoUploadRequest);
             var foo = VideoResultError.CreateInstance(
                 "An error occured while uploading the video.",
                 HttpContext,

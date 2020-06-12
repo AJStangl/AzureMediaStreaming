@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AzureMediaStreaming.Context;
 using AzureMediaStreaming.DataModels.Context;
 using AzureMediaStreaming.DataModels.Models;
-using Microsoft.AspNetCore.Http;
+using AzureMediaStreaming.DataModels.RequestResponse;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Logging;
 
@@ -13,7 +12,7 @@ namespace AzureMediaStreaming.AzureServices
 {
     public interface IAzureStreamingService
     {
-        public Task<IList<string>> UploadFileAsync(IFormFile formFile);
+        public Task<IList<string>> UploadFileAsync(VideoUploadRequest videoRequest);
     }
 
     internal class AzureStreamingService : IAzureStreamingService
@@ -30,20 +29,21 @@ namespace AzureMediaStreaming.AzureServices
             _assetContext = assetContext;
         }
 
-        public async Task<IList<string>> UploadFileAsync(IFormFile formFile)
+        public async Task<IList<string>> UploadFileAsync(VideoUploadRequest videoRequest)
         {
             _logger.LogInformation("Starting Upload...");
-            var assetFile = new MediaAsset(Guid.NewGuid(), formFile);
-            var asset = await _assetContext.GetAssetsByName(assetFile.FormFile.FileName);
+
+            var mediaAsset = MediaAsset.CreateInstance(videoRequest);
+            var asset = await _assetContext.GetAssetsByName(mediaAsset.AssetName);
 
             if (asset != null) return asset.StreamingUrl.Select(x => x.Url).ToList();
 
             _logger.LogInformation("Creating input asset...");
-            var inputAsset = await _azureMediaService.CreateInputAssetAsync(assetFile);
+            var inputAsset = await _azureMediaService.CreateInputAssetAsync(mediaAsset);
 
             _logger.LogInformation("Creating output asset...");
             var outputAsset =
-                await _azureMediaService.CreateOutputAssetAsync(assetFile.InputAssetName, assetFile.OutputAssetName);
+                await _azureMediaService.CreateOutputAssetAsync(mediaAsset.InputAssetName, mediaAsset.OutputAssetName);
             if (inputAsset.Name == outputAsset.Name)
             {
                 _logger.LogWarning("Input and output can't be the same.");
@@ -54,7 +54,7 @@ namespace AzureMediaStreaming.AzureServices
             var transform = await _azureMediaService.GetOrCreateTransformAsync();
 
             _logger.LogInformation("Starting job...");
-            var job = await _azureMediaService.SubmitJobAsync(transform.Name, assetFile.JobName, inputAsset.Name,
+            var job = await _azureMediaService.SubmitJobAsync(transform.Name, mediaAsset.JobName, inputAsset.Name,
                 outputAsset.Name);
 
             var waitForJob = await _azureMediaService.WaitForJobToFinishAsync(transform.Name, job.Name);
@@ -67,7 +67,7 @@ namespace AzureMediaStreaming.AzureServices
 
             _logger.LogInformation("Creating streaming Locator...");
             var locator =
-                await _azureMediaService.CreateStreamingLocatorAsync(outputAsset.Name, assetFile.LocatorName);
+                await _azureMediaService.CreateStreamingLocatorAsync(outputAsset.Name, mediaAsset.LocatorName);
 
             _logger.LogInformation("Obtaining streaming urls...");
             var urls = await _azureMediaService.GetStreamingUrlsAsync(locator.Name);
@@ -75,12 +75,12 @@ namespace AzureMediaStreaming.AzureServices
             var streamingUrls = urls.Select(url => new StreamingUrl
             {
                 Url = url,
-                AssetEntityId = assetFile.UniqueId
+                AssetEntityId = mediaAsset.UniqueId
             }).ToHashSet();
 
-            assetFile.StreamingUrls = streamingUrls;
+            mediaAsset.StreamingUrls = streamingUrls;
             _logger.LogInformation("Storing Results in database...");
-            await _assetContext.CreateUpdateAssetEntity(assetFile);
+            await _assetContext.CreateUpdateAssetEntity(mediaAsset);
             return urls;
         }
     }
