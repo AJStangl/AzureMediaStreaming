@@ -4,15 +4,64 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AzureMediaStreaming.Context.Models;
-using AzureMediaStreaming.Controllers.Models;
+using AzureMediaStreaming.DataModels.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace AzureMediaStreaming.Context
 {
     public partial class AssetContext
     {
+        public async Task CreateUpdateAssetEntity(MediaAsset mediaAsset)
+        {
+            var assetEntity = AssetEntity.CreateInstance();
+            assetEntity.Id = Guid.NewGuid();
+            assetEntity.FileName = mediaAsset.FormFile.FileName;
+            assetEntity.AssetName = mediaAsset.AssetName;
+            assetEntity.InputAssetName = mediaAsset.InputAssetName;
+            assetEntity.OutputAssetName = mediaAsset.OutputAssetName;
+            assetEntity.JobName = mediaAsset.JobName;
+            assetEntity.LocatorName = mediaAsset.LocatorName;
+            assetEntity.StreamingUrl = mediaAsset.StreamingUrls.Select(x =>
+            {
+                var url = new StreamingUrl
+                {
+                    Id = Guid.NewGuid(), AssetEntityId = assetEntity.Id, AssetEntity = assetEntity, Url = x.Url
+                };
+                return url;
+            }).ToHashSet();
+            assetEntity.AssetMetaDataEntity = new AssetMetaDataEntity
+            {
+                Id = Guid.NewGuid(),
+                AssetEntityId = assetEntity.Id,
+                AssetEntity = assetEntity,
+                FirstName = mediaAsset.AssetMetaData.FirstName,
+                LastName = mediaAsset.AssetMetaData.LastName,
+                PhoneNumber = mediaAsset.AssetMetaData.PhoneNumber,
+                Street = mediaAsset.AssetMetaData.State,
+                ZipCode = mediaAsset.AssetMetaData.ZipCode,
+                City = mediaAsset.AssetMetaData.City,
+                State = mediaAsset.AssetMetaData.State,
+                Date = mediaAsset.AssetMetaData.Date,
+                Time = mediaAsset.AssetMetaData.Time
+            };
+            await AssetEntities.AddAsync(assetEntity);
+            await SaveChangesAsync();
+        }
+
+        public async Task<AssetEntity> GetAssetsByName(string filename)
+        {
+            return await AssetEntities
+                .Include(x => x.StreamingUrl)
+                .FirstOrDefaultAsync(x => x.FileName == filename);
+        }
+
+        public List<StreamingUrl> GetStreamingUrl()
+        {
+            throw new NotImplementedException();
+        }
+
         public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             var entries = ChangeTracker
                 .Entries()
@@ -25,48 +74,10 @@ namespace AzureMediaStreaming.Context
                 ((BaseEntity) entityEntry.Entity).UpdatedDate = DateTime.Now;
 
                 if (entityEntry.State == EntityState.Added)
-                {
                     ((BaseEntity) entityEntry.Entity).CreatedDate = DateTime.Now;
-                }
             }
 
             return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-        }
-
-        public async Task CreateUpdateAssetEntity(MediaAsset mediaAsset)
-        {
-
-            AssetEntity assetEntity = new AssetEntity
-            {
-                Id = Guid.NewGuid(),
-                FileName = mediaAsset.FormFile.FileName,
-                AssetName = mediaAsset.AssetName,
-                InputAssetName = mediaAsset.InputAssetName,
-                OutputAssetName = mediaAsset.OutputAssetName,
-                JobName = mediaAsset.JobName,
-                LocatorName = mediaAsset.LocatorName,
-            };
-            assetEntity.StreamingUrl = mediaAsset.StreamingUrls.Select(x =>
-            {
-                var url = new StreamingUrl
-                {
-                    Id = Guid.NewGuid(), AssetEntityId = assetEntity.Id, AssetEntity = assetEntity, Url = x.Url
-                };
-                return url;
-            }).ToHashSet();
-            AssetEntities.Add(assetEntity);
-            await SaveChangesAsync();
-        }
-
-        public async Task<AssetEntity> GetAssetsByName(string filename)
-        {
-            return await AssetEntities
-                .Include(x => x.StreamingUrl)
-                .FirstOrDefaultAsync(x => x.FileName == filename);
-        }
-        public List<StreamingUrl> GetStreamingUrl()
-        {
-            throw new System.NotImplementedException();
         }
     }
 }

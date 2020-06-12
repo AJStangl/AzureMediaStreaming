@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using AzureMediaStreaming.ActionResults;
 using AzureMediaStreaming.AzureServices;
-using AzureMediaStreaming.Settings;
-using AzureMediaStreaming.ViewModels;
+using AzureMediaStreaming.DataModels;
+using AzureMediaStreaming.DataModels.RequestResponse;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace AzureMediaStreaming.Controllers
@@ -15,8 +15,8 @@ namespace AzureMediaStreaming.Controllers
     [Route("[controller]")]
     public class MediaController : ControllerBase
     {
-        private readonly IAzureStreamingService _azureStreamingService;
         private readonly IAzureMediaService _azureMediaService;
+        private readonly IAzureStreamingService _azureStreamingService;
         private readonly ILogger<MediaController> _logger;
 
         public MediaController(
@@ -29,53 +29,58 @@ namespace AzureMediaStreaming.Controllers
             _logger = logger;
         }
 
-        [HttpPost]
-        [Route("[action]")]
-        public async Task Video([FromForm(Name = "file")] IFormFile formFile)
-        {
-            // TODO: All sorts of stuff to validate that this is a file we want to save.
-            // Upload the file if less than ~30 MB
-            if (formFile.Length < 30000000)
-            {
-                // TODO: Do stuff here like add a loading icon
-                var foo = await _azureStreamingService.UploadFileAsync(formFile);
-            }
-            else
-            {
-                // TODO: Add some sort of useful error page
-                ModelState.AddModelError("File", "The file is too large.");
-            }
-        }
-
         [HttpGet]
         [Route("[action]")]
-        public async Task<VideoModel> Video()
+        public async Task<IActionResult> Video()
         {
-            // TODO: Implement Search for videos
-            string locatorName = "locator-ca2fc45b-7b10-41de-a68e-baea2d532f5f-20200607_072358.mp4";
+            var locatorName = "locator-ca2fc45b-7b10-41de-a68e-baea2d532f5f-20200607_072358.mp4";
             _logger.LogInformation("Getting streaming");
             try
             {
                 var videoUrls = await _azureMediaService.GetStreamingUrlsAsync(locatorName);
-                string videoUrl = videoUrls.FirstOrDefault();
+                var videoUrl = videoUrls.FirstOrDefault();
 
-                return new VideoModel
+                return Ok(new VideoModel
                 {
                     VideoName = "Demo Video",
                     VideoUrl = videoUrl
-                };
+                });
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An error has occured trying to obtain data");
-                throw;
+                _logger.LogError(e, "An error has occured trying to obtain data.");
+                var videoResultError = VideoResultError.CreateInstance(
+                    "An error has occured trying to obtain data.",
+                    HttpContext,
+                    ErrorType.Generic);
+                return new VideoResult(videoResultError, 500);
             }
         }
 
-        public RedirectResult Error()
+        [HttpPost]
+        [Route("[action]")]
+        public async Task<IActionResult> Video([FromForm] VideoUploadRequest videoUploadRequest)
         {
-            // TODO: Actually have this do something
-            return Redirect("/Error");
+            _logger.LogInformation("Starting upload...");
+
+            // TODO: Fire and Forget or wait and load?
+            await Task.Delay(new TimeSpan(0, 0, 3));
+
+            var foo = VideoResultError.CreateInstance(
+                "Just Dont...",
+                HttpContext,
+                ErrorType.Generic);
+
+            var result = new VideoResult(foo, StatusCodes.Status422UnprocessableEntity);
+            return result;
+            await _azureStreamingService.UploadFileAsync(videoUploadRequest);
+        }
+
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IActionResult> Search()
+        {
+            throw new NotImplementedException($"{Request.Path.Value} is not active");
         }
     }
 }

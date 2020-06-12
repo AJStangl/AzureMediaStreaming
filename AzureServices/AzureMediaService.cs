@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using AzureMediaStreaming.Controllers.Models;
+using AzureMediaStreaming.DataModels.Models;
 using AzureMediaStreaming.Settings;
 using EnsureThat;
 using Microsoft.Azure.Management.Media;
@@ -16,11 +16,12 @@ using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace AzureMediaStreaming.AzureServices
 {
-    class AzureMediaService : IAzureMediaService
+    internal class AzureMediaService : IAzureMediaService
     {
-        private readonly ILogger<AzureMediaService> _logger;
-        private readonly ClientSettings _clientSettings;
         private readonly IAzureMediaServicesClient _azureMediaServicesClient;
+        private readonly ClientSettings _clientSettings;
+        private readonly ILogger<AzureMediaService> _logger;
+
         public AzureMediaService(
             ILogger<AzureMediaService> logger,
             IOptions<ClientSettings> clientSettings)
@@ -33,7 +34,7 @@ namespace AzureMediaStreaming.AzureServices
         public async Task<Transform> GetOrCreateTransformAsync()
         {
             const string adaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
-            Transform transform = await _azureMediaServicesClient
+            var transform = await _azureMediaServicesClient
                 .Transforms
                 .GetAsync(
                     _clientSettings.ResourceGroup,
@@ -58,14 +59,15 @@ namespace AzureMediaStreaming.AzureServices
 
             return transform;
         }
+
         /// <summary>
-        /// Calls media service to check if an asset exists and if not to create one, store it in blob and return the
-        /// asset.
+        ///     Calls media service to check if an asset exists and if not to create one, store it in blob and return the
+        ///     asset.
         /// </summary>
         public async Task<Asset> CreateInputAssetAsync(MediaAsset mediaAssetFileDto)
         {
             // TODO: This inital check will be performed by a database call to get back the metadata associated with the asset
-            Asset asset = await _azureMediaServicesClient.Assets.CreateOrUpdateAsync(_clientSettings.ResourceGroup,
+            var asset = await _azureMediaServicesClient.Assets.CreateOrUpdateAsync(_clientSettings.ResourceGroup,
                 _clientSettings.AccountName, mediaAssetFileDto.InputAssetName, new Asset());
 
             // Use Media Services API to get back a response that contains SAS URL for the Asset container into which to
@@ -82,7 +84,7 @@ namespace AzureMediaStreaming.AzureServices
 
             // Use Storage API to get a reference to the Asset container that was created by calling Asset's
             // CreateOrUpdate method.
-            CloudBlobContainer container = new CloudBlobContainer(sasUri);
+            var container = new CloudBlobContainer(sasUri);
 
             var blob = container.GetBlockBlobReference(mediaAssetFileDto.FormFile.FileName);
 
@@ -96,7 +98,7 @@ namespace AzureMediaStreaming.AzureServices
         {
             EnsureArg.IsNotEmptyOrWhiteSpace(inputAssetName, nameof(inputAssetName));
             EnsureArg.IsNotEmptyOrWhiteSpace(outputAssetName, nameof(outputAssetName));
-            Asset asset = new Asset();
+            var asset = new Asset();
             return await _azureMediaServicesClient.Assets.CreateOrUpdateAsync(
                 _clientSettings.ResourceGroup,
                 _clientSettings.AccountName,
@@ -120,14 +122,14 @@ namespace AzureMediaStreaming.AzureServices
             string outputAssetName)
         {
             // Use the name of the created input asset to create the job input.
-            JobInput jobInput = new JobInputAsset(assetName: inputAssetName);
+            JobInput jobInput = new JobInputAsset(inputAssetName);
 
             JobOutput[] jobOutputs =
             {
                 new JobOutputAsset(outputAssetName)
             };
 
-            Job job = await _azureMediaServicesClient.Jobs.CreateAsync(
+            var job = await _azureMediaServicesClient.Jobs.CreateAsync(
                 _clientSettings.ResourceGroup,
                 _clientSettings.AccountName,
                 transformName,
@@ -135,7 +137,7 @@ namespace AzureMediaStreaming.AzureServices
                 new Job
                 {
                     Input = jobInput,
-                    Outputs = jobOutputs,
+                    Outputs = jobOutputs
                 });
 
             return job;
@@ -149,24 +151,21 @@ namespace AzureMediaStreaming.AzureServices
             Job job;
             do
             {
-                job = await _azureMediaServicesClient.Jobs.GetAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName,
+                job = await _azureMediaServicesClient.Jobs.GetAsync(_clientSettings.ResourceGroup,
+                    _clientSettings.AccountName,
                     transformName, jobName);
 
                 _logger.LogInformation($"Job is '{job.State}'.");
-                for (int i = 0; i < job.Outputs.Count; i++)
+                for (var i = 0; i < job.Outputs.Count; i++)
                 {
-                    JobOutput output = job.Outputs[i];
+                    var output = job.Outputs[i];
                     _logger.LogInformation($"\tJobOutput[{i}] is '{output.State}'.");
                     if (output.State == JobState.Processing)
-                    {
                         _logger.LogInformation($"  Progress: '{output.Progress}'.");
-                    }
                 }
 
                 if (job.State != JobState.Finished && job.State != JobState.Error && job.State != JobState.Canceled)
-                {
                     await Task.Delay(sleepIntervalMinutes);
-                }
             } while (job.State != JobState.Finished && job.State != JobState.Error && job.State != JobState.Canceled);
 
             return job;
@@ -174,7 +173,7 @@ namespace AzureMediaStreaming.AzureServices
 
         public async Task<StreamingLocator> CreateStreamingLocatorAsync(string assetName, string locatorName)
         {
-            StreamingLocator locator = await _azureMediaServicesClient.StreamingLocators.CreateAsync(
+            var locator = await _azureMediaServicesClient.StreamingLocators.CreateAsync(
                 _clientSettings.ResourceGroup,
                 _clientSettings.AccountName,
                 locatorName,
@@ -193,17 +192,16 @@ namespace AzureMediaStreaming.AzureServices
 
             IList<string> streamingUrls = new List<string>();
 
-            StreamingEndpoint streamingEndpoint =
-                await _azureMediaServicesClient.StreamingEndpoints.GetAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName,
+            var streamingEndpoint =
+                await _azureMediaServicesClient.StreamingEndpoints.GetAsync(_clientSettings.ResourceGroup,
+                    _clientSettings.AccountName,
                     defaultStreamingEndpointName);
 
             if (streamingEndpoint != null)
             {
                 if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
-                {
                     await _azureMediaServicesClient.StreamingEndpoints.StartAsync(_clientSettings.ResourceGroup,
                         _clientSettings.AccountName, defaultStreamingEndpointName);
-                }
             }
             // Should Probably handle this...
             else
@@ -211,13 +209,13 @@ namespace AzureMediaStreaming.AzureServices
                 return new List<string>();
             }
 
-            ListPathsResponse paths =
+            var paths =
                 await _azureMediaServicesClient.StreamingLocators.ListPathsAsync(_clientSettings.ResourceGroup,
                     _clientSettings.AccountName, locatorName);
 
             paths.StreamingPaths.ToList().ForEach(path =>
             {
-                UriBuilder uriBuilder = new UriBuilder
+                var uriBuilder = new UriBuilder
                 {
                     Scheme = "https",
                     Host = streamingEndpoint?.HostName,
@@ -232,25 +230,22 @@ namespace AzureMediaStreaming.AzureServices
         public async Task DownloadOutputAssetAsync(string assetName)
         {
             const string outputFolderName = @"Output";
-            if (!Directory.Exists(outputFolderName))
-            {
-                Directory.CreateDirectory(outputFolderName);
-            }
+            if (!Directory.Exists(outputFolderName)) Directory.CreateDirectory(outputFolderName);
 
-            AssetContainerSas assetContainerSas = await _azureMediaServicesClient.Assets.ListContainerSasAsync(
+            var assetContainerSas = await _azureMediaServicesClient.Assets.ListContainerSasAsync(
                 _clientSettings.ResourceGroup,
                 _clientSettings.AccountName,
                 assetName,
-                permissions: AssetContainerPermission.Read,
-                expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime());
+                AssetContainerPermission.Read,
+                DateTime.UtcNow.AddHours(1).ToUniversalTime());
 
-            Uri containerSasUrl = new Uri(assetContainerSas?.AssetContainerSasUrls?.FirstOrDefault());
+            var containerSasUrl = new Uri(assetContainerSas?.AssetContainerSasUrls?.FirstOrDefault());
 
             IList<Task> downloadTasks = new List<Task>();
 
-            CloudBlobContainer container = new CloudBlobContainer(containerSasUrl);
+            var container = new CloudBlobContainer(containerSasUrl);
 
-            string directory = Path.Combine(outputFolderName, assetName);
+            var directory = Path.Combine(outputFolderName, assetName);
             Directory.CreateDirectory(directory);
 
             _logger.LogInformation($"Downloading output results to '{directory}'...");
@@ -258,7 +253,7 @@ namespace AzureMediaStreaming.AzureServices
             BlobContinuationToken continuationToken = null;
             do
             {
-                BlobResultSegment segment = await container.ListBlobsSegmentedAsync(
+                var segment = await container.ListBlobsSegmentedAsync(
                     null,
                     true,
                     BlobListingDetails.None,
@@ -268,10 +263,10 @@ namespace AzureMediaStreaming.AzureServices
                     null);
                 segment.Results.ToList().ForEach(blobItem =>
                 {
-                    CloudBlockBlob blob = blobItem as CloudBlockBlob;
+                    var blob = blobItem as CloudBlockBlob;
                     if (blob != null)
                     {
-                        string path = Path.Combine(directory, blob.Name);
+                        var path = Path.Combine(directory, blob.Name);
                         downloadTasks.Add(blob.DownloadToFileAsync(path, FileMode.Create));
                     }
                 });
@@ -285,24 +280,27 @@ namespace AzureMediaStreaming.AzureServices
 
         public async Task CleanUpAsync(string transformName, List<string> assetNames, string jobName)
         {
-            await _azureMediaServicesClient.Jobs.DeleteAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName, transformName,
+            await _azureMediaServicesClient.Jobs.DeleteAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName,
+                transformName,
                 jobName);
 
             assetNames.ForEach(async assetName =>
             {
-                await _azureMediaServicesClient.Assets.DeleteAsync(_clientSettings.ResourceGroup, _clientSettings.AccountName,
+                await _azureMediaServicesClient.Assets.DeleteAsync(_clientSettings.ResourceGroup,
+                    _clientSettings.AccountName,
                     assetName);
             });
         }
 
         private AzureMediaServicesClient GetAzureMediaServicesClient()
         {
-            ClientCredential clientCredential =
+            var clientCredential =
                 new ClientCredential(_clientSettings?.AadClientId, _clientSettings?.AadSecret);
-            var serviceClientCredentials = ApplicationTokenProvider.LoginSilentAsync(_clientSettings?.AadTenantId, clientCredential, ActiveDirectoryServiceSettings.Azure).Result;
+            var serviceClientCredentials = ApplicationTokenProvider.LoginSilentAsync(_clientSettings?.AadTenantId,
+                clientCredential, ActiveDirectoryServiceSettings.Azure).Result;
             return new AzureMediaServicesClient(_clientSettings?.ArmEndpoint, serviceClientCredentials)
             {
-                SubscriptionId = _clientSettings?.SubscriptionId,
+                SubscriptionId = _clientSettings?.SubscriptionId
             };
         }
     }
