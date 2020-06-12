@@ -109,6 +109,17 @@ class VideoUpload extends React.Component {
         );
     }
 
+    RenderHandledError() {
+        return (
+            <div>
+                <h1>Something Went Wrong</h1>
+                <h2>
+                    {this.state.errorMessage}
+                </h2>
+            </div>
+        );
+    }
+
     renderRow(name, display, type) {
         return <div className="col-md-6">
             <div className="form-group">
@@ -138,16 +149,6 @@ class VideoUpload extends React.Component {
             </div>)
     }
 
-    RenderHandledError() {
-        return (
-            <div>
-                <h1>Something Went Wrong</h1>
-                <h2>
-                    {this.state.errorMessage}
-                </h2>
-            </div>
-        );
-    }
 
     SetForm() {
         return (

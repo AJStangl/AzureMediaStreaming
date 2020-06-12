@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using AzureMediaStreaming.DataModels.Context;
+using AzureMediaStreaming.Context.Models;
 using AzureMediaStreaming.DataModels.Models;
 
 namespace AzureMediaStreaming.Context

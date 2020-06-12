@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AzureMediaStreaming.DataModels.Context;
+using AzureMediaStreaming.Context.Models;
 using AzureMediaStreaming.DataModels.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,7 +29,22 @@ namespace AzureMediaStreaming.Context
                 };
                 return url;
             }).ToHashSet();
-            AssetEntities.Add(assetEntity);
+            assetEntity.AssetMetaDataEntity = new AssetMetaDataEntity
+            {
+                Id = Guid.NewGuid(),
+                AssetEntityId = assetEntity.Id,
+                AssetEntity = assetEntity,
+                FirstName = mediaAsset.AssetMetaData.FirstName,
+                LastName = mediaAsset.AssetMetaData.LastName,
+                PhoneNumber = mediaAsset.AssetMetaData.PhoneNumber,
+                Street = mediaAsset.AssetMetaData.State,
+                ZipCode = mediaAsset.AssetMetaData.ZipCode,
+                City = mediaAsset.AssetMetaData.City,
+                State = mediaAsset.AssetMetaData.State,
+                Date = mediaAsset.AssetMetaData.Date,
+                Time = mediaAsset.AssetMetaData.Time
+            };
+            await AssetEntities.AddAsync(assetEntity);
             await SaveChangesAsync();
         }
 

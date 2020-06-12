@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using AzureMediaStreaming.DataModels.Context;
+using System.ComponentModel.DataAnnotations;
+using AzureMediaStreaming.Context.Models;
 using AzureMediaStreaming.DataModels.Interfaces;
 using AzureMediaStreaming.DataModels.RequestResponse;
 using Microsoft.AspNetCore.Http;
@@ -54,22 +55,21 @@ namespace AzureMediaStreaming.DataModels.Models
     /// </summary>
     public class AssetMetaData : IAssetMetaData
     {
-        public string FirstName { get; set; }
+        [MaxLength(100)] public string FirstName { get; set; }
 
-        public string LastName { get; set; }
+        [MaxLength(100)] public string LastName { get; set; }
 
-        public string PhoneNumber { get; set; }
+        [MaxLength(100)] public string PhoneNumber { get; set; }
 
-        public string Street { get; set; }
+        [MaxLength(100)] public string Street { get; set; }
 
-        public string ZipCode { get; set; }
+        [MaxLength(100)] public string ZipCode { get; set; }
 
-        public string City { get; set; }
+        [MaxLength(100)] public string City { get; set; }
 
-        public string State { get; set; }
+        [MaxLength(100)] public string State { get; set; }
 
         public DateTimeOffset? Date { get; set; }
-
         public DateTimeOffset? Time { get; set; }
     }
 }

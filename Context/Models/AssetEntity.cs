@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using AzureMediaStreaming.DataModels.Interfaces;
 using Newtonsoft.Json;
 
-namespace AzureMediaStreaming.DataModels.Context
+namespace AzureMediaStreaming.Context.Models
 {
     public class AssetEntity : BaseEntity
     {
@@ -19,7 +19,7 @@ namespace AzureMediaStreaming.DataModels.Context
         public string JobName { get; set; }
         public string LocatorName { get; set; }
         public virtual ICollection<StreamingUrl> StreamingUrl { get; set; }
-        public virtual AssetMetaData AssetMetaData { get; set; }
+        public virtual AssetMetaDataEntity AssetMetaDataEntity { get; set; }
 
         internal static AssetEntity CreateInstance()
         {
@@ -27,7 +27,7 @@ namespace AzureMediaStreaming.DataModels.Context
         }
     }
 
-    public class AssetMetaData : BaseEntity, IAssetMetaData
+    public class AssetMetaDataEntity : BaseEntity, IAssetMetaData
     {
         [JsonIgnore] public virtual Guid AssetEntityId { get; set; }
         [JsonIgnore] public virtual AssetEntity AssetEntity { get; set; }

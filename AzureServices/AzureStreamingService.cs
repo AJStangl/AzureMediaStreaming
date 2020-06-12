@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using AzureMediaStreaming.Context;
-using AzureMediaStreaming.DataModels.Context;
+using AzureMediaStreaming.Context.Models;
 using AzureMediaStreaming.DataModels.Models;
 using AzureMediaStreaming.DataModels.RequestResponse;
 using Microsoft.Azure.Management.Media.Models;

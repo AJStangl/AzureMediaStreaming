@@ -66,14 +66,14 @@ namespace AzureMediaStreaming.Controllers
             // TODO: Fire and Forget or wait and load?
             await Task.Delay(new TimeSpan(0, 0, 3));
 
-            await _azureStreamingService.UploadFileAsync(videoUploadRequest);
             var foo = VideoResultError.CreateInstance(
-                "An error occured while uploading the video.",
+                "Just Dont...",
                 HttpContext,
                 ErrorType.Generic);
 
             var result = new VideoResult(foo, StatusCodes.Status422UnprocessableEntity);
             return result;
+            await _azureStreamingService.UploadFileAsync(videoUploadRequest);
         }
 
         [HttpGet]
