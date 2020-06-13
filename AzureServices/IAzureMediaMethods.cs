@@ -5,7 +5,7 @@ using Microsoft.Azure.Management.Media.Models;
 
 namespace AzureMediaStreaming.AzureServices
 {
-    public interface IAzureMediaService
+    public interface IAzureMediaMethods
     {
         public Task<Asset> CreateInputAssetAsync(MediaAsset mediaAsset);
         public Task<Asset> CreateOutputAssetAsync(string inputAssetName, string outputAssetName);

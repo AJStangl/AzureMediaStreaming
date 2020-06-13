@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AzureMediaStreaming.Context.Models;
 using AzureMediaStreaming.DataModels.Models;
+using AzureMediaStreaming.DataModels.RequestResponse;
 using Microsoft.EntityFrameworkCore;
 
 namespace AzureMediaStreaming.Context
@@ -37,7 +38,7 @@ namespace AzureMediaStreaming.Context
                 FirstName = mediaAsset.AssetMetaData.FirstName,
                 LastName = mediaAsset.AssetMetaData.LastName,
                 PhoneNumber = mediaAsset.AssetMetaData.PhoneNumber,
-                Street = mediaAsset.AssetMetaData.State,
+                Street = mediaAsset.AssetMetaData.Street,
                 ZipCode = mediaAsset.AssetMetaData.ZipCode,
                 City = mediaAsset.AssetMetaData.City,
                 State = mediaAsset.AssetMetaData.State,
@@ -47,6 +48,26 @@ namespace AzureMediaStreaming.Context
             await AssetEntities.AddAsync(assetEntity);
             await SaveChangesAsync();
             return assetEntity;
+        }
+
+        public Task<List<AssetEntity>> SearchForAssets(VideoSearchRequest videoSearchRequest)
+        {
+            if (videoSearchRequest == null)
+                return AssetEntities
+                    .Include(x => x.StreamingUrl)
+                    .Include(x => x.AssetMetaDataEntity).Select(x => x).Take(10)
+                    .OrderByDescending(x => x.CreatedDate)
+                    .ToListAsync();
+            throw new NotImplementedException();
+        }
+
+        public AssetEntity GetAssetById(string assetId)
+        {
+            return AssetEntities
+                .Include(x => x.StreamingUrl)
+                .Include(x => x.AssetMetaDataEntity)
+                .FirstOrDefault(x => x.Id.ToString()
+                    .Equals(assetId));
         }
 
         public async Task<AssetEntity> GetAssetsByName(string filename)

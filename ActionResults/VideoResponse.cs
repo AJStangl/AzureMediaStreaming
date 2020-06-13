@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AzureMediaStreaming.ActionResults
 {
-    public class VideoResult : ObjectResult
+    public class VideoResponse : ObjectResult
     {
-        public VideoResult(object value, int statusCode) : base(value)
+        public VideoResponse(object value, int statusCode) : base(value)
         {
             Value = value;
             StatusCode = statusCode;
@@ -33,6 +33,7 @@ namespace AzureMediaStreaming.ActionResults
 
     public enum ErrorType
     {
-        Generic
+        InternalServer,
+        NotFound
     }
 }

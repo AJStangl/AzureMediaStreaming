@@ -27,15 +27,12 @@ namespace AzureMediaStreaming
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc(options =>
-            {
-                options.EnableEndpointRouting = false;
-            });
+            services.AddMvc(options => { options.EnableEndpointRouting = false; });
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
             services.Configure<ClientSettings>(options =>
                 _configuration.GetSection(nameof(ClientSettings)).Bind(options));
             services.AddTransient<IAzureMediaServicesClient>(x => GetAzureMediaServicesClient());
-            services.AddTransient<IAzureMediaService, AzureMediaService>();
+            services.AddTransient<IAzureMediaMethods, AzureMediaMethods>();
             services.AddTransient<IAzureStreamingService, AzureStreamingService>();
             services.AddTransient<IAssetContext, AssetContext>();
 
@@ -66,14 +63,10 @@ namespace AzureMediaStreaming
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
-            {
                 app.UseDeveloperExceptionPage();
-            }
             else
-            {
                 app.UseDeveloperExceptionPage();
-                // app.UseExceptionHandler("/Error");
-            }
+            // app.UseExceptionHandler("/Error");
 
             app.UseHsts();
             app.UseHttpsRedirection();
@@ -85,8 +78,8 @@ namespace AzureMediaStreaming
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{controller}/{action=Index}/{id?}");
+                    "default",
+                    "{controller}/{action=Index}/{id?}");
             });
 
 
@@ -97,10 +90,7 @@ namespace AzureMediaStreaming
                 app.UseStaticFiles();
                 app.UseSpaStaticFiles();
 
-                if (env.IsDevelopment())
-                {
-                    spa.UseReactDevelopmentServer(npmScript: "start");
-                }
+                if (env.IsDevelopment()) spa.UseReactDevelopmentServer("start");
             });
         }
 
@@ -109,13 +99,13 @@ namespace AzureMediaStreaming
             var clientSettings = _configuration.GetSection(nameof(ClientSettings)).Get<ClientSettings>();
             EnsureArg.IsNotNull(clientSettings, nameof(clientSettings));
 
-            ClientCredential clientCredential =
+            var clientCredential =
                 new ClientCredential(clientSettings?.AadClientId, clientSettings?.AadSecret);
             var serviceClientCredentials = ApplicationTokenProvider.LoginSilentAsync(clientSettings?.AadTenantId,
                 clientCredential, ActiveDirectoryServiceSettings.Azure).Result;
             return new AzureMediaServicesClient(clientSettings.ArmEndpoint, serviceClientCredentials)
             {
-                SubscriptionId = clientSettings.SubscriptionId,
+                SubscriptionId = clientSettings.SubscriptionId
             };
         }
     }

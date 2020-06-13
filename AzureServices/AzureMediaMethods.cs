@@ -16,14 +16,14 @@ using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace AzureMediaStreaming.AzureServices
 {
-    internal class AzureMediaService : IAzureMediaService
+    internal class AzureMediaMethods : IAzureMediaMethods
     {
         private readonly IAzureMediaServicesClient _azureMediaServicesClient;
         private readonly ClientSettings _clientSettings;
-        private readonly ILogger<AzureMediaService> _logger;
+        private readonly ILogger<AzureMediaMethods> _logger;
 
-        public AzureMediaService(
-            ILogger<AzureMediaService> logger,
+        public AzureMediaMethods(
+            ILogger<AzureMediaMethods> logger,
             IOptions<ClientSettings> clientSettings)
         {
             _logger = logger;
@@ -99,13 +99,6 @@ namespace AzureMediaStreaming.AzureServices
             EnsureArg.IsNotEmptyOrWhiteSpace(inputAssetName, nameof(inputAssetName));
             EnsureArg.IsNotEmptyOrWhiteSpace(outputAssetName, nameof(outputAssetName));
             var asset = new Asset();
-            return await _azureMediaServicesClient.Assets.CreateOrUpdateAsync(
-                _clientSettings.ResourceGroup,
-                _clientSettings.AccountName,
-                outputAssetName,
-                asset);
-            // TODO: Hypothetically we should be able to check if the asset exists and if it does we should not add anything
-            // Check if an asset already exists.
             // Asset outputAsset =
             //     await _azureMediaServicesClient
             //         .Assets
@@ -113,6 +106,15 @@ namespace AzureMediaStreaming.AzureServices
             //             _clientSettings.ResourceGroup,
             //             _clientSettings.AccountName,
             //             inputAssetName);
+
+            return await _azureMediaServicesClient.Assets.CreateOrUpdateAsync(
+                _clientSettings.ResourceGroup,
+                _clientSettings.AccountName,
+                outputAssetName,
+                asset);
+
+            // TODO: Hypothetically we should be able to check if the asset exists and if it does we should not add anything
+            // Check if an asset already exists.
         }
 
         public async Task<Job> SubmitJobAsync(

@@ -185,7 +185,6 @@ class VideoUpload extends React.Component {
     render() {
         let contents = null;
         console.log(this.state)
-        // console.log(this.state)
         if (this.state.loading === false) {
             contents = this.SetForm()
         }
