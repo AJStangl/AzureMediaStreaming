@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import Loader from "./Loader";
 import {Link} from 'react-router-dom'
+import Button from "@material-ui/core/Button";
 
 export class Home extends Component {
     static displayName = Home.name;
@@ -23,11 +24,12 @@ export class Home extends Component {
                 }],
             error: false,
             errorMessage: '',
-            loading: true
+            loading: true,
+            getData: false
         };
     }
 
-    componentDidMount = async () => {
+    async getData() {
         await fetch('/media/LatestVideo')
             .then(async response => await response.json())
             .then(data => {
@@ -99,10 +101,17 @@ export class Home extends Component {
         );
     }
 
+    RenderGetData() {
+        return (<Button onClick={() => this.getData()}>Load Data</Button>)
+    }
+
     render() {
         let contents = null;
-
-        if (this.state.loading === true) {
+        console.log(this.state)
+        if (this.state.getData === false) {
+            contents = this.RenderGetData();
+        }
+        if (this.state.loading === true && this.state.getData === true) {
             contents = this.RenderLoading()
         }
         if (this.state.error === true) {
