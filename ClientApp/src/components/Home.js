@@ -107,11 +107,7 @@ export class Home extends Component {
 
     render() {
         let contents = null;
-        console.log(this.state)
-        if (this.state.getData === false) {
-            contents = this.RenderGetData();
-        }
-        if (this.state.loading === true && this.state.getData === true) {
+        if (this.state.loading === true) {
             contents = this.RenderLoading()
         }
         if (this.state.error === true) {
