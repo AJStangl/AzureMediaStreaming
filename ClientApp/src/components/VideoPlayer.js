@@ -7,10 +7,9 @@ export class VideoPlayer extends Component {
     static displayName = VideoPlayer.name;
     constructor(props) {
         super(props);
-        const {videoName, videoUrl} = props.location.state
         this.state = {
-            videoId: null,
-            videoData: {videoName, videoUrl},
+            videoId: this?.props?.match?.params['id'] ?? null,
+            videoData: null,
             loading: true,
             error: false,
             errorMessage: ''

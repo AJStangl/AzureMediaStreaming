@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import Loader from "./Loader";
-import {Link} from 'react-router-dom'
-import Button from "@material-ui/core/Button";
+import MaterialTable from 'material-table';
+import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 
 export class Home extends Component {
     static displayName = Home.name;
@@ -29,100 +29,83 @@ export class Home extends Component {
         };
     }
 
-    async getData() {
-        await fetch('/media/LatestVideo')
-            .then(async response => await response.json())
-            .then(data => {
+    render() {
+        let contents = null;
+        let dataPromise = GetLatestVideo();
+
+        if (this.state.loading) {
+            contents = RenderLoading()
+            dataPromise.then((data) => {
                 this.setState({
                     videoResponse: data,
                     loading: false
                 })
-            })
-            .catch(err => this.setState({
-                videoData: {},
-                loading: false,
-                error: true,
-                errorMessage: err
-            }));
-    };
-
-
-    // TODO: Replace with a materialUI table for reactive filtering.
-    renderTableData() {
-        const videos = this.state.videoResponse
-        return (
-            <table className='table table-striped' aria-labelledby="tabelLabel">
-                <thead>
-                <tr>
-                    <th>Link</th>
-                    <th>Date Recorded</th>
-                    <th>Time Recorded</th>
-                    <th>Address</th>
-                    <th>File Name</th>
-                </tr>
-                </thead>
-                <tbody>
-                {videos.map(video =>
-                    <tr key={video.id}>
-                        <Link to={{
-                            pathname: '/fetch-video', state: {
-                                videoName: video.videoName,
-                                videoUrl: video.videoUrl
-                            }
-                        }}>Go To Video</Link>
-                        <td>{video.date}</td>
-                        <td>{video.time}</td>
-                        <td>{video.street}</td>
-                        <td>{video.videoName}</td>
-                    </tr>
-                )}
-                </tbody>
-            </table>
-        );
-    }
-
-    RenderLoading() {
-        return (
-            <div className={'container-fluid'}>
-                <p> Loading Content...</p>
-                <Loader/>
-            </div>
-        );
-    }
-
-    RenderHandledError() {
-        return (
-            <div>
-                <h1>Something Went Wrong</h1>
-                <h2>
-                    {this.state.errorMessage}
-                </h2>
-            </div>
-        );
-    }
-
-    RenderGetData() {
-        return (<Button onClick={() => this.getData()}>Load Data</Button>)
-    }
-
-    render() {
-        let contents = null;
-        if (this.state.loading === true) {
-            contents = this.RenderLoading()
+            });
         }
-        if (this.state.error === true) {
-            contents = this.RenderHandledError()
+
+        if (this.state.videoResponse.length > 1) {
+            contents = GetDataTable(this.state.videoResponse)
         }
-        if (this.state.loading === false) {
-            contents = this.renderTableData()
-        }
+
         return (
             <div>
                 <h1>Patterson Park Video Repository</h1>
-                <p>A simple way for the community to share videos of crimes in one place</p>
-                <p>Lastest Videos</p>
+                <p>A simple way for the community to share of crimes in one place</p>
                 {contents}
             </div>
         );
     }
+}
+
+function GetDataTable(videoData) {
+
+    let table = {
+        columns: [
+            {title: 'Date Recorded', field: 'date'},
+            {title: 'Time Recorded', field: 'time'},
+            {title: 'Address', field: 'street'},
+            {title: 'File Name', field: 'videoName'}
+        ],
+        data: videoData,
+        actions: [{
+            icon: PlayArrowIcon,
+            tooltip: 'Go to video',
+            onClick: (event, rowData) => {
+                window.location.href = '/fetch-video/' + rowData.id
+            }
+        }]
+    }
+
+
+    return (
+        <MaterialTable
+            title="Latest Videos"
+            columns={table.columns}
+            data={table.data}
+            actions={table.actions}
+        />
+    );
+}
+
+export function GetLatestVideo() {
+    return fetch('/media/LatestVideo')
+        .then((response) => response.json())
+        .then((responseData) => {
+            return responseData;
+        })
+        .catch(err => {
+            Home.setState({
+                error: true,
+                errorMessage: err
+            })
+        });
+}
+
+export function RenderLoading() {
+    return (
+        <div className={'container-fluid'}>
+            <p> Loading Content...</p>
+            <Loader/>
+        </div>
+    );
 }

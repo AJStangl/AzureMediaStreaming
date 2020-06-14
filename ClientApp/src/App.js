@@ -16,7 +16,7 @@ export default class App extends Component {
             <Layout>
                 <ErrorBoundary>
                     <Route exact path='/' component={Home}/>
-                    <Route path='/fetch-video' component={VideoPlayer}/>
+                    <Route path='/fetch-video/:id' component={VideoPlayer} exact={true}/>
                     <Route path='/upload-video' component={VideoUpload}/>
                 </ErrorBoundary>
             </Layout>
