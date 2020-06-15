@@ -1,10 +1,14 @@
+using System;
+using System.Threading.Tasks;
 using AzureMediaStreaming.AzureServices;
 using AzureMediaStreaming.Context.Assets;
 using AzureMediaStreaming.Context.Authorization;
 using AzureMediaStreaming.Context.Authorization.Models;
 using AzureMediaStreaming.Settings;
 using EnsureThat;
+using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -30,55 +34,58 @@ namespace AzureMediaStreaming
 
         public void ConfigureServices(IServiceCollection services)
         {
+            #region - MVC and Client Applications
             services.AddMvc(options => { options.EnableEndpointRouting = false; });
+            services.AddControllersWithViews();
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
-            services.Configure<ClientSettings>(options =>
-                _configuration.GetSection(nameof(ClientSettings)).Bind(options));
+            #endregion
 
-            # region - Application Services
+            # region - Application Services and Configuratios
 
             services.AddTransient<IAzureMediaServicesClient>(x => GetAzureMediaServicesClient());
             services.AddTransient<IAzureMediaMethods, AzureMediaMethods>();
             services.AddTransient<IAzureStreamingService, AzureStreamingService>();
             services.AddTransient<IAssetContext, AssetContext>();
+            services.Configure<ClientSettings>(options =>
+                _configuration.GetSection(nameof(ClientSettings)).Bind(options));
 
             #endregion
 
-
-            #region - Context Pools
+            #region - Context Pools and Database
 
             services.AddDbContextPool<AssetContext>(options =>
             {
                 options.UseSqlServer(_configuration.GetConnectionString("AssetDatabase"));
             });
 
-            services.AddDbContextPool<AuthorizationContext>(options =>
+            services.AddDbContext<AuthorizationContext>(options =>
             {
                 options.UseSqlServer(_configuration.GetConnectionString("AssetDatabase"));
             });
 
             #endregion
 
-
-            # region - Authorization and Security
-
-            services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<AuthorizationContext>();
-
+            # region - Authorization and JWT
             services.AddIdentityServer()
                 .AddApiAuthorization<ApplicationUser, AuthorizationContext>();
 
-            services.AddAuthentication()
-                .AddIdentityServerJwt();
-
-            services.AddControllersWithViews();
-
             services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<AuthorizationContext>();
 
             services.AddAuthentication()
                 .AddIdentityServerJwt();
 
+            services.Configure<JwtBearerOptions>(
+                IdentityServerJwtConstants.IdentityServerJwtBearerScheme,
+                options =>
+                {
+                    Func<TokenValidatedContext, Task> onTokenValidated = options.Events.OnTokenValidated;
+
+                    options.Events.OnTokenValidated = async context => { await onTokenValidated(context); };
+                });
+            #endregion
+
+            #region - Cors and Antiforgery
             services.AddAntiforgery(o =>
             {
                 o.SuppressXFrameOptionsHeader = true;
@@ -95,12 +102,12 @@ namespace AzureMediaStreaming
                     builder.Build();
                 });
             });
-
             #endregion
 
+            #region - Azure and Telemetry
             services.AddApplicationInsightsTelemetry();
+            #endregion
         }
-
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {

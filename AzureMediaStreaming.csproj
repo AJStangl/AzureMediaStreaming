@@ -7,56 +7,59 @@
         <IsPackable>false</IsPackable>
         <SpaRoot>ClientApp\</SpaRoot>
         <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
-        <AzureMediaPlayerJs>https://amp.azure.net/libs/amp/2.1.4/azuremediaplayer.min.js</AzureMediaPlayerJs>
-        <AzureMediaPlayerCss>https://amp.azure.net/libs/amp/2.1.4/skins/amp-default/azuremediaplayer.min.css</AzureMediaPlayerCss>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Ensure.That" Version="9.0.1"/>
-        <PackageReference Include="MediatR" Version="8.0.1"/>
-        <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="8.0.0"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.4"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.4"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.4"/>
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.4"/>
-        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.4"/>
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.4"/>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.4"/>
-        <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.13.1"/>
-        <PackageReference Include="Microsoft.Extensions.Logging.AzureAppServices" Version="2.1.1"/>
-        <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure.Authentication" Version="2.4.0"/>
-        <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.13.1"/>
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Cors" Version="2.2.0"/>
-        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="3.1.4"/>
-        <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0"/>
-        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="3.1.4"/>
-        <PackageReference Include="Microsoft.AspNetCore.ApiAuthorization.IdentityServer" Version="3.1.4"/>
-        <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="3.1.4"/>
-        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.4"/>
-        <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="3.1.4"/>
-        <PackageReference Include="Microsoft.Azure.Management.Media" Version="2.0.5"/>
-        <PackageReference Include="WindowsAzure.Storage" Version="9.3.3"/>
+        <PackageReference Include="Ensure.That" Version="9.0.1" />
+        <PackageReference Include="MediatR" Version="8.0.1" />
+        <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="8.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.4" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.4" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.4" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.4" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.4" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.4" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.4" />
+        <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.13.1" />
+        <PackageReference Include="Microsoft.Extensions.Logging.AzureAppServices" Version="2.1.1" />
+        <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure.Authentication" Version="2.4.0" />
+        <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.13.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Cors" Version="2.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="3.1.4" />
+        <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="3.1.4" />
+        <PackageReference Include="Microsoft.AspNetCore.ApiAuthorization.IdentityServer" Version="3.1.4" />
+        <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="3.1.4" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.4" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="3.1.4" />
+        <PackageReference Include="Microsoft.Azure.Management.Media" Version="2.0.5" />
+        <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
     </ItemGroup>
 
     <ItemGroup>
         <!-- Don't publish the SPA source files, but do show them in the project files list -->
-        <Content Remove="$(SpaRoot)**"/>
-        <None Remove="$(SpaRoot)**"/>
-        <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**"/>
+        <Content Remove="$(SpaRoot)**" />
+        <None Remove="$(SpaRoot)**" />
+        <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
+        <Content Update="appsettings.Development.json">
+          <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="ExceptionHandler"/>
-        <Folder Include="Response"/>
+        <Folder Include="ExceptionHandler" />
+        <Folder Include="Response" />
     </ItemGroup>
     <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
         <!-- Ensure Node.js is installed -->
         <Exec Command="node --version" ContinueOnError="true">
-            <Output TaskParameter="ExitCode" PropertyName="ErrorCode"/>
+            <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
         </Exec>
-        <Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE."/>
-        <Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..."/>
-        <Exec WorkingDirectory="$(SpaRoot)" Command="npm install"/>
+        <Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
+        <Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..." />
+        <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
     </Target>
 
     <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
@@ -73,13 +76,5 @@
                 <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
             </ResolvedFileToPublish>
         </ItemGroup>
-    </Target>
-    <Target Name="DownloadStaticFiles" BeforeTargets="Build">
-        <DownloadFile SourceUrl="$(AzureMediaPlayerJs)" DestinationFolder="$(SpaRoot)\public\js\vendor" SkipUnchangedFiles="true">
-            <Output TaskParameter="DownloadedFile" ItemName="Content" />
-        </DownloadFile>
-        <DownloadFile SourceUrl="$(AzureMediaPlayerCss)" DestinationFolder="$(SpaRoot)\public\css\vendor" SkipUnchangedFiles="true">
-            <Output TaskParameter="DownloadedFile" ItemName="Content" />
-        </DownloadFile>
     </Target>
 </Project>
