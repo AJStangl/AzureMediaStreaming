@@ -4,9 +4,7 @@ using AzureMediaStreaming.Context.Authorization;
 using AzureMediaStreaming.Context.Authorization.Models;
 using AzureMediaStreaming.Settings;
 using EnsureThat;
-using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -78,14 +76,8 @@ namespace AzureMediaStreaming
             services.AddAuthentication()
                 .AddIdentityServerJwt();
 
-            services.Configure<JwtBearerOptions>(
-                IdentityServerJwtConstants.IdentityServerJwtBearerScheme,
-                options =>
-                {
-                    var onTokenValidated = options.Events.OnTokenValidated;
-
-                    options.Events.OnTokenValidated = async context => { await onTokenValidated(context); };
-                });
+            services.AddControllersWithViews();
+            services.AddRazorPages();
 
             #endregion
 

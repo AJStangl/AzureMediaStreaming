@@ -32,22 +32,30 @@ export class Home extends Component {
 
     componentDidMount = async () => {
         const token = await authService.getAccessToken();
-        return fetch('/media/LatestVideo', {
+        const response = await fetch('/media/LatestVideo', {
             headers: !token ? {} : {'Authorization': `Bearer ${token}`}
-        })
-            .then((response) => response.json())
-            .then((responseData) => {
-                this.setState({
-                    loading: false,
-                    videoResponse: responseData
-                })
-            })
-            .catch(err => {
-                this.setState({
-                    error: true,
-                    errorMessage: err
-                })
-            });
+        });
+        const data = await response.json();
+        this.setState({videoResponse: data, loading: false});
+        // console.log(token)
+        // return fetch('/media/LatestVideo', {
+        //     headers: !token ? {} : {'Authorization': `Bearer ${token}`}
+        // return fetch('/media/LatestVideo', {
+        //     headers: !token ? {} : {'Authorization': `Bearer ${token}`}
+        // })
+        //     .then((response) => response.json())
+        //     .then((responseData) => {
+        //         this.setState({
+        //             loading: false,
+        //             videoResponse: responseData
+        //         })
+        //     })
+        //     .catch(err => {
+        //         this.setState({
+        //             error: true,
+        //             errorMessage: err
+        //         })
+        //     });
     }
 
     render() {
@@ -60,6 +68,9 @@ export class Home extends Component {
 
         if (this.state.videoResponse.length > 1) {
             contents = GetDataTable(this.state.videoResponse)
+        }
+        if (!this.state.loading) {
+            contents = RenderNoData();
         }
 
         return (
@@ -109,4 +120,10 @@ function RenderLoading() {
             <Loader/>
         </div>
     );
+}
+
+function RenderNoData() {
+    return (
+        <div>No Data Found</div>
+    )
 }
