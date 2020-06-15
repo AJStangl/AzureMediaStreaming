@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import Loader from "./Loader";
 import MaterialTable from 'material-table';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import authService from './api-authorization/AuthorizeService'
 
 export class Home extends Component {
     static displayName = Home.name;
@@ -29,18 +30,32 @@ export class Home extends Component {
         };
     }
 
+    componentDidMount = async () => {
+        const token = await authService.getAccessToken();
+        return fetch('/media/LatestVideo', {
+            headers: !token ? {} : {'Authorization': `Bearer ${token}`}
+        })
+            .then((response) => response.json())
+            .then((responseData) => {
+                this.setState({
+                    loading: false,
+                    videoResponse: responseData
+                })
+            })
+            .catch(err => {
+                this.setState({
+                    error: true,
+                    errorMessage: err
+                })
+            });
+    }
+
     render() {
         let contents = null;
-        let dataPromise = GetLatestVideo();
+        // let dataPromise = GetLatestVideo(this.state);
 
         if (this.state.loading) {
             contents = RenderLoading()
-            dataPromise.then((data) => {
-                this.setState({
-                    videoResponse: data,
-                    loading: false
-                })
-            });
         }
 
         if (this.state.videoResponse.length > 1) {
@@ -85,20 +100,6 @@ function GetDataTable(videoData) {
             actions={table.actions}
         />
     );
-}
-
-function GetLatestVideo() {
-    return fetch('/media/LatestVideo')
-        .then((response) => response.json())
-        .then((responseData) => {
-            return responseData;
-        })
-        .catch(err => {
-            Home.setState({
-                error: true,
-                errorMessage: err
-            })
-        });
 }
 
 function RenderLoading() {

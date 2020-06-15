@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using AzureMediaStreaming.AzureServices;
 using AzureMediaStreaming.Context.Assets;
 using AzureMediaStreaming.Context.Authorization;
@@ -12,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Azure.Management.Media;
 using Microsoft.EntityFrameworkCore;
@@ -35,9 +34,11 @@ namespace AzureMediaStreaming
         public void ConfigureServices(IServiceCollection services)
         {
             #region - MVC and Client Applications
+
             services.AddMvc(options => { options.EnableEndpointRouting = false; });
             services.AddControllersWithViews();
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
+
             #endregion
 
             # region - Application Services and Configuratios
@@ -53,6 +54,10 @@ namespace AzureMediaStreaming
 
             #region - Context Pools and Database
 
+            services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+                .AddEntityFrameworkStores<AuthorizationContext>()
+                .AddDefaultTokenProviders();
+
             services.AddDbContextPool<AssetContext>(options =>
             {
                 options.UseSqlServer(_configuration.GetConnectionString("AssetDatabase"));
@@ -66,11 +71,9 @@ namespace AzureMediaStreaming
             #endregion
 
             # region - Authorization and JWT
+
             services.AddIdentityServer()
                 .AddApiAuthorization<ApplicationUser, AuthorizationContext>();
-
-            services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<AuthorizationContext>();
 
             services.AddAuthentication()
                 .AddIdentityServerJwt();
@@ -79,13 +82,15 @@ namespace AzureMediaStreaming
                 IdentityServerJwtConstants.IdentityServerJwtBearerScheme,
                 options =>
                 {
-                    Func<TokenValidatedContext, Task> onTokenValidated = options.Events.OnTokenValidated;
+                    var onTokenValidated = options.Events.OnTokenValidated;
 
                     options.Events.OnTokenValidated = async context => { await onTokenValidated(context); };
                 });
+
             #endregion
 
             #region - Cors and Antiforgery
+
             services.AddAntiforgery(o =>
             {
                 o.SuppressXFrameOptionsHeader = true;
@@ -102,32 +107,47 @@ namespace AzureMediaStreaming
                     builder.Build();
                 });
             });
+
             #endregion
 
             #region - Azure and Telemetry
+
             services.AddApplicationInsightsTelemetry();
+
             #endregion
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
+            {
                 app.UseDeveloperExceptionPage();
-            else
-                app.UseDeveloperExceptionPage();
+                app.UseDatabaseErrorPage();
+            }
 
-            app.UseHsts();
+            else
+            {
+                app.UseExceptionHandler("/Error");
+                app.UseHsts();
+            }
+
+            app.UseMvc();
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
+
             app.UseRouting();
-            app.UseMvc();
+
+            app.UseAuthentication();
+            app.UseIdentityServer();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
                     "default",
                     "{controller}/{action=Index}/{id?}");
+                endpoints.MapRazorPages();
             });
 
 
@@ -140,9 +160,6 @@ namespace AzureMediaStreaming
 
                 if (env.IsDevelopment()) spa.UseReactDevelopmentServer("start");
             });
-
-            app.UseAuthentication();
-            app.UseIdentityServer();
         }
 
         private AzureMediaServicesClient GetAzureMediaServicesClient()

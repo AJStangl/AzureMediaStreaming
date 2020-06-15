@@ -4,12 +4,14 @@ using System.Threading.Tasks;
 using AzureMediaStreaming.ActionResults;
 using AzureMediaStreaming.AzureServices;
 using AzureMediaStreaming.DataModels.RequestResponse;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace AzureMediaStreaming.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class MediaController : ControllerBase

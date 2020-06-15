@@ -6,6 +6,9 @@ import {VideoPlayer} from "./components/VideoPlayer";
 import VideoUpload from "./components/VideoUpload";
 import './custom.css'
 import ErrorBoundary from "./components/ErrorBoundary";
+import AuthorizeRoute from './components/api-authorization/AuthorizeRoute';
+import ApiAuthorizationRoutes from './components/api-authorization/ApiAuthorizationRoutes';
+import {ApplicationPaths} from './components/api-authorization/ApiAuthorizationConstants';
 
 
 export default class App extends Component {
@@ -15,9 +18,10 @@ export default class App extends Component {
         return (
             <Layout>
                 <ErrorBoundary>
-                    <Route exact path='/' component={Home}/>
-                    <Route path='/fetch-video/:id' component={VideoPlayer} exact={true}/>
-                    <Route path='/upload-video' component={VideoUpload}/>
+                    <AuthorizeRoute exact path='/' component={Home}/>
+                    <AuthorizeRoute path='/fetch-video/:id' component={VideoPlayer} exact={true}/>
+                    <AuthorizeRoute path='/upload-video' component={VideoUpload}/>
+                    <Route path={ApplicationPaths.ApiAuthorizationPrefix} component={ApiAuthorizationRoutes}/>
                 </ErrorBoundary>
             </Layout>
         );
