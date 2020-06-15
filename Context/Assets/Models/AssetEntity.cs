@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using AzureMediaStreaming.Context.Common;
 using AzureMediaStreaming.DataModels.Interfaces;
 using Newtonsoft.Json;
 
-namespace AzureMediaStreaming.Context.Models
+namespace AzureMediaStreaming.Context.Assets.Models
 {
     public class AssetEntity : BaseEntity
     {

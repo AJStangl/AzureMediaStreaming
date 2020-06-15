@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AzureMediaStreaming.Context.Models;
+using AzureMediaStreaming.Context.Assets.Models;
+using AzureMediaStreaming.Context.Common;
 using AzureMediaStreaming.DataModels.Models;
 using AzureMediaStreaming.DataModels.RequestResponse;
 using Microsoft.EntityFrameworkCore;
 
-namespace AzureMediaStreaming.Context
+namespace AzureMediaStreaming.Context.Assets
 {
     public partial class AssetContext
     {

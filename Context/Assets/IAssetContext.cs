@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using AzureMediaStreaming.Context.Models;
+using AzureMediaStreaming.Context.Assets.Models;
 using AzureMediaStreaming.DataModels.Models;
 using AzureMediaStreaming.DataModels.RequestResponse;
 
-namespace AzureMediaStreaming.Context
+namespace AzureMediaStreaming.Context.Assets
 {
     public interface IAssetContext
     {

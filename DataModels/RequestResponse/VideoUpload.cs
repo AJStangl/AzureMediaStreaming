@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using AzureMediaStreaming.Context.Models;
+using AzureMediaStreaming.Context.Assets.Models;
 using AzureMediaStreaming.Controllers;
 using AzureMediaStreaming.DataModels.Interfaces;
 using Microsoft.AspNetCore.Http;

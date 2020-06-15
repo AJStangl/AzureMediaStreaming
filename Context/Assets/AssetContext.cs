@@ -1,8 +1,8 @@
-﻿using AzureMediaStreaming.Context.Models;
+﻿using AzureMediaStreaming.Context.Assets.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace AzureMediaStreaming.Context
+namespace AzureMediaStreaming.Context.Assets
 {
     public partial class AssetContext : DbContext, IAssetContext
     {

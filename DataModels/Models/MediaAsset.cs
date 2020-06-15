@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using AzureMediaStreaming.Context.Models;
+using AzureMediaStreaming.Context.Assets.Models;
 using AzureMediaStreaming.DataModels.Interfaces;
 using AzureMediaStreaming.DataModels.RequestResponse;
 using Microsoft.AspNetCore.Http;

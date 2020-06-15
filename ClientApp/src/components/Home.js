@@ -87,7 +87,7 @@ function GetDataTable(videoData) {
     );
 }
 
-export function GetLatestVideo() {
+function GetLatestVideo() {
     return fetch('/media/LatestVideo')
         .then((response) => response.json())
         .then((responseData) => {
@@ -101,7 +101,7 @@ export function GetLatestVideo() {
         });
 }
 
-export function RenderLoading() {
+function RenderLoading() {
     return (
         <div className={'container-fluid'}>
             <p> Loading Content...</p>

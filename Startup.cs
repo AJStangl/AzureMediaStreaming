@@ -1,7 +1,10 @@
 using AzureMediaStreaming.AzureServices;
-using AzureMediaStreaming.Context;
+using AzureMediaStreaming.Context.Assets;
+using AzureMediaStreaming.Context.Authorization;
+using AzureMediaStreaming.Context.Authorization.Models;
 using AzureMediaStreaming.Settings;
 using EnsureThat;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -31,10 +34,50 @@ namespace AzureMediaStreaming
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
             services.Configure<ClientSettings>(options =>
                 _configuration.GetSection(nameof(ClientSettings)).Bind(options));
+
+            # region - Application Services
+
             services.AddTransient<IAzureMediaServicesClient>(x => GetAzureMediaServicesClient());
             services.AddTransient<IAzureMediaMethods, AzureMediaMethods>();
             services.AddTransient<IAzureStreamingService, AzureStreamingService>();
             services.AddTransient<IAssetContext, AssetContext>();
+
+            #endregion
+
+
+            #region - Context Pools
+
+            services.AddDbContextPool<AssetContext>(options =>
+            {
+                options.UseSqlServer(_configuration.GetConnectionString("AssetDatabase"));
+            });
+
+            services.AddDbContextPool<AuthorizationContext>(options =>
+            {
+                options.UseSqlServer(_configuration.GetConnectionString("AssetDatabase"));
+            });
+
+            #endregion
+
+
+            # region - Authorization and Security
+
+            services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+                .AddEntityFrameworkStores<AuthorizationContext>();
+
+            services.AddIdentityServer()
+                .AddApiAuthorization<ApplicationUser, AuthorizationContext>();
+
+            services.AddAuthentication()
+                .AddIdentityServerJwt();
+
+            services.AddControllersWithViews();
+
+            services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+                .AddEntityFrameworkStores<AuthorizationContext>();
+
+            services.AddAuthentication()
+                .AddIdentityServerJwt();
 
             services.AddAntiforgery(o =>
             {
@@ -52,13 +95,12 @@ namespace AzureMediaStreaming
                     builder.Build();
                 });
             });
-            services.AddApplicationInsightsTelemetry();
 
-            services.AddDbContextPool<AssetContext>(options =>
-            {
-                options.UseSqlServer(_configuration.GetConnectionString("AssetDatabase"));
-            });
+            #endregion
+
+            services.AddApplicationInsightsTelemetry();
         }
+
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
@@ -66,7 +108,6 @@ namespace AzureMediaStreaming
                 app.UseDeveloperExceptionPage();
             else
                 app.UseDeveloperExceptionPage();
-            // app.UseExceptionHandler("/Error");
 
             app.UseHsts();
             app.UseHttpsRedirection();
@@ -92,6 +133,9 @@ namespace AzureMediaStreaming
 
                 if (env.IsDevelopment()) spa.UseReactDevelopmentServer("start");
             });
+
+            app.UseAuthentication();
+            app.UseIdentityServer();
         }
 
         private AzureMediaServicesClient GetAzureMediaServicesClient()

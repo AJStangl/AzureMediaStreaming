@@ -1,6 +1,6 @@
 using System;
 using System.Linq;
-using AzureMediaStreaming.Context.Models;
+using AzureMediaStreaming.Context.Assets.Models;
 using AzureMediaStreaming.DataModels.Interfaces;
 
 namespace AzureMediaStreaming.DataModels.RequestResponse

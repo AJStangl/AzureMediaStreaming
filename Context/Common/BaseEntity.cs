@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AzureMediaStreaming.Context.Models
+namespace AzureMediaStreaming.Context.Common
 {
     /// <summary>
     ///     Base class for common entity properties
