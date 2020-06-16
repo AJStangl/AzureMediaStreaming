@@ -102,6 +102,7 @@ namespace AzureMediaStreaming.Controllers
         }
 
         [HttpGet]
+        [Authorize(AuthenticationSchemes = "Identity.Application")]
         [Route("[action]")]
         public async Task<IActionResult> LatestVideo()
         {

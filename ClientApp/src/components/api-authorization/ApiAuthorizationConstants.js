@@ -1,4 +1,4 @@
-export const ApplicationName = 'foo';
+export const ApplicationName = 'AzureMediaStreamingAPI';
 
 export const QueryParameterNames = {
   ReturnUrl: 'returnUrl',

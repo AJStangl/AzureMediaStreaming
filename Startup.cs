@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Azure.Management.Media;
 using Microsoft.EntityFrameworkCore;
@@ -31,15 +30,10 @@ namespace AzureMediaStreaming
 
         public void ConfigureServices(IServiceCollection services)
         {
-            #region - MVC and Client Applications
-
             services.AddMvc(options => { options.EnableEndpointRouting = false; });
             services.AddControllersWithViews();
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
 
-            #endregion
-
-            # region - Application Services and Configuratios
 
             services.AddTransient<IAzureMediaServicesClient>(x => GetAzureMediaServicesClient());
             services.AddTransient<IAzureMediaMethods, AzureMediaMethods>();
@@ -47,28 +41,17 @@ namespace AzureMediaStreaming
             services.AddTransient<IAssetContext, AssetContext>();
             services.Configure<ClientSettings>(options =>
                 _configuration.GetSection(nameof(ClientSettings)).Bind(options));
-
-            #endregion
-
-            #region - Context Pools and Database
-
-            services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<AuthorizationContext>()
-                .AddDefaultTokenProviders();
-
             services.AddDbContextPool<AssetContext>(options =>
             {
                 options.UseSqlServer(_configuration.GetConnectionString("AssetDatabase"));
             });
 
+
             services.AddDbContext<AuthorizationContext>(options =>
-            {
-                options.UseSqlServer(_configuration.GetConnectionString("AssetDatabase"));
-            });
+                options.UseSqlServer(_configuration.GetConnectionString("AssetDatabase")));
 
-            #endregion
-
-            # region - Authorization and JWT
+            services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+                .AddEntityFrameworkStores<AuthorizationContext>();
 
             services.AddIdentityServer()
                 .AddApiAuthorization<ApplicationUser, AuthorizationContext>();
@@ -78,10 +61,6 @@ namespace AzureMediaStreaming
 
             services.AddControllersWithViews();
             services.AddRazorPages();
-
-            #endregion
-
-            #region - Cors and Antiforgery
 
             services.AddAntiforgery(o =>
             {
@@ -100,13 +79,8 @@ namespace AzureMediaStreaming
                 });
             });
 
-            #endregion
-
-            #region - Azure and Telemetry
 
             services.AddApplicationInsightsTelemetry();
-
-            #endregion
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -133,6 +107,7 @@ namespace AzureMediaStreaming
 
             app.UseAuthentication();
             app.UseIdentityServer();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

@@ -31,46 +31,45 @@ export class Home extends Component {
     }
 
     componentDidMount = async () => {
-        const token = await authService.getAccessToken();
-        const response = await fetch('/media/LatestVideo', {
+        const token = authService.getAccessToken();
+        await fetch('/media/LatestVideo', {
             headers: !token ? {} : {'Authorization': `Bearer ${token}`}
-        });
-        const data = await response.json();
-        this.setState({videoResponse: data, loading: false});
-        // console.log(token)
-        // return fetch('/media/LatestVideo', {
-        //     headers: !token ? {} : {'Authorization': `Bearer ${token}`}
-        // return fetch('/media/LatestVideo', {
-        //     headers: !token ? {} : {'Authorization': `Bearer ${token}`}
-        // })
-        //     .then((response) => response.json())
-        //     .then((responseData) => {
-        //         this.setState({
-        //             loading: false,
-        //             videoResponse: responseData
-        //         })
-        //     })
-        //     .catch(err => {
-        //         this.setState({
-        //             error: true,
-        //             errorMessage: err
-        //         })
-        //     });
+        }).then(response => {
+            if (response.ok) {
+                var json = response.json()
+                this.setState({
+                    videoResponse: json,
+                    loading: false
+                })
+            }
+            if (response.status === 401) {
+                this.setState({
+                    error: true,
+                    errorMessage: "Not Authorized",
+                    loading: false
+                })
+            }
+        })
     }
+
 
     render() {
         let contents = null;
-        // let dataPromise = GetLatestVideo(this.state);
 
         if (this.state.loading) {
             contents = RenderLoading()
         }
 
+        if (this.state.error) {
+            contents = RenderError(this.state.errorMessage)
+        }
+
+        if (this.state.videoResponse.length === 1 && !this.state.error) {
+            contents = RenderNoData();
+        }
+
         if (this.state.videoResponse.length > 1) {
             contents = GetDataTable(this.state.videoResponse)
-        }
-        if (!this.state.loading) {
-            contents = RenderNoData();
         }
 
         return (
@@ -82,6 +81,7 @@ export class Home extends Component {
         );
     }
 }
+
 
 function GetDataTable(videoData) {
 
@@ -127,3 +127,17 @@ function RenderNoData() {
         <div>No Data Found</div>
     )
 }
+
+function RenderError(error) {
+    return (
+        <div> {error} </div>
+    )
+}
+
+function GetData() {
+    const token = authService.getAccessToken();
+    return fetch('/media/LatestVideo', {
+        headers: !token ? {} : {'Authorization': `Bearer ${token}`}
+    });
+}
+
