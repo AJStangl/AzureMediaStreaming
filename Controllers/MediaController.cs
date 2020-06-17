@@ -16,49 +16,19 @@ namespace AzureMediaStreaming.Controllers
     [Route("[controller]")]
     public class MediaController : ControllerBase
     {
-        private readonly IAzureMediaMethods _azureMediaMethods;
         private readonly IAzureStreamingService _azureStreamingService;
         private readonly ILogger<MediaController> _logger;
 
         public MediaController(
             IAzureStreamingService azureStreaming,
-            IAzureMediaMethods azureMediaMethods,
             ILogger<MediaController> logger)
         {
-            _azureMediaMethods = azureMediaMethods;
             _azureStreamingService = azureStreaming;
             _logger = logger;
         }
 
         [HttpGet]
-        [Route("[action]")]
-        public async Task<IActionResult> Video()
-        {
-            var locatorName = "locator-ca2fc45b-7b10-41de-a68e-baea2d532f5f-20200607_072358.mp4";
-            _logger.LogInformation("Getting streaming...");
-            try
-            {
-                var videoUrls = await _azureMediaMethods.GetStreamingUrlsAsync(locatorName);
-                var videoUrl = videoUrls.FirstOrDefault();
-
-                return Ok(new VideoStreamResponse
-                {
-                    VideoName = "Demo Video",
-                    VideoUrl = videoUrl
-                });
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "An error has occured trying to obtain data.");
-                var videoResultError = VideoResultError.CreateInstance(
-                    "An error has occured trying to obtain data.",
-                    HttpContext,
-                    ErrorType.InternalServer);
-                return new VideoResponse(videoResultError, 500);
-            }
-        }
-
-        [HttpGet]
+        [AllowAnonymous]
         [Route("[action]/{videoId}")]
         public IActionResult Video(string videoId)
         {
@@ -78,6 +48,7 @@ namespace AzureMediaStreaming.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         [Route("[action]")]
         public async Task<IActionResult> Video([FromForm] VideoUploadRequest videoUploadRequest)
         {
@@ -101,6 +72,7 @@ namespace AzureMediaStreaming.Controllers
             }
         }
 
+        // TODO: Allow privileged users to see results.
         [HttpGet]
         [Authorize(AuthenticationSchemes = "Identity.Application")]
         [Route("[action]")]
